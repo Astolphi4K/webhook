@@ -28,12 +28,11 @@ def receber_webhook():
         print("Headers:", dict(request.headers))
         print("Body:", request.data.decode('utf-8'))
         print("JSON:", request.get_json())  # cuidado: pode dar erro se o JSON for inválido
-        raw_data = request.form.get('data')  # ou request.values.get('data')
-        print(raw_data)
-        if not raw_data:
+        data = request.get_json(force=True)  # ou request.values.get('data')
+        print(data)
+        if not data:
             return jsonify({'erro': 'Nenhum dado recebido'}), 400
 
-        data = json.loads(raw_data)  # Agora sim é um dicionário Python
         print('DATA DECODIFICADO:', data)
 
         notas = data.get('retorno', {}).get('notasfiscais', [])
