@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Pedidos</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+        }
+        th {
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pedidos Recebidos</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Status</th>
+                <th>ID Loja</th>
+                <th>Chave de Acesso</th>
+                <th>Nome</th>
+                <th>Num. NFe</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pedido in pedidos %}
+            <tr>
+                <td>{{ pedido.id }}</td>
+                <td>{{ pedido.status }}</td>
+                <td>{{ pedido.idloja }}</td>
+                <td>{{ pedido.chaveacesso }}</td>
+                <td>{{ pedido.nome }}</td>
+                <td>{{ pedido.numnfe }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">Nenhum pedido encontrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
