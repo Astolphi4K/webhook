@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
+import json
+import psycopg2
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://webhook_bling_user:9yH7z6LmIl9FBVTjlfmCE8LmdsRTlNjV@dpg-d1hf3iqdbo4c73dbgdqg-a.oregon-postgres.render.com/webhook_bling'
@@ -21,15 +23,20 @@ class Pedido(db.Model):
 
 
 @app.route('/webhook', methods=['POST'])
+@app.route('/webhook', methods=['POST'])
 def receber_webhook():
-    data = request.get_json()
-
     try:
+        raw_data = request.form.get('data')  # ou request.values.get('data')
+        if not raw_data:
+            return jsonify({'erro': 'Nenhum dado recebido'}), 400
+
+        data = json.loads(raw_data)  # Agora sim é um dicionário Python
+        print('DATA DECODIFICADO:', data)
+
         notas = data.get('retorno', {}).get('notasfiscais', [])
 
         for item in notas:
             nota = item.get('notafiscal', {})
-
             if nota.get('situacao') == 'Autorizada':
                 novo_pedido = Pedido(
                     id=int(nota.get('id')),
@@ -44,17 +51,23 @@ def receber_webhook():
                 if not existente:
                     db.session.add(novo_pedido)
                     db.session.commit()
+                    print(f"Salvo: {novo_pedido.id}")
+                else:
+                    print(f"Já existe: {novo_pedido.id}")
 
         return jsonify({'status': 'sucesso'}), 200
 
     except Exception as e:
+        print('Erro ao processar webhook:', e)
         return jsonify({'erro': str(e)}), 500
 
 
 @app.route('/pedidos')
 def listar_pedidos():
     pedidos = Pedido.query.all()
+    print(pedidos)
     return render_template('pedidos.html', pedidos=pedidos)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
