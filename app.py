@@ -34,7 +34,7 @@ def receber_webhook():
 
         # Decodifica o conteúdo JSON (que estava como string dentro de 'data=')
         data = json.loads(raw_body)
-        print("JSON limpo:", json_data)
+        print("JSON limpo:", data)
         if not data:
             return jsonify({'erro': 'Nenhum dado recebido'}), 400
 
