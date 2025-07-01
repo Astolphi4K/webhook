@@ -25,11 +25,16 @@ class Pedido(db.Model):
 @app.route('/webhook', methods=['POST'])
 def receber_webhook():
     try:
-        print("Headers:", dict(request.headers))
-        print("Body:", request.data.decode('utf-8'))
-        print("JSON:", request.get_json())  # cuidado: pode dar erro se o JSON for inválido
-        data = request.get_json(force=True)  # ou request.values.get('data')
-        print(data)
+        raw_body = request.get_data(as_text=True)
+        print("Corpo bruto recebido:", raw_body)
+
+        # Se começar com "data=", remove isso
+        if raw_body.startswith("data="):
+            raw_body = raw_body[5:]
+
+        # Decodifica o conteúdo JSON (que estava como string dentro de 'data=')
+        data = json.loads(raw_body)
+        print("JSON limpo:", json_data)
         if not data:
             return jsonify({'erro': 'Nenhum dado recebido'}), 400
 
