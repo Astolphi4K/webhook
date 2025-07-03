@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
 import json
 import psycopg2
-import datetime
+from datetime import datetime
 from sqlalchemy import desc
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://webhook_bling_user:9yH7z6LmIl9FBVTjlfmCE8LmdsRTlNjV@dpg-d1hf3iqdbo4c73dbgdqg-a.oregon-postgres.render.com/webhook_bling'
