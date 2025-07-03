@@ -73,13 +73,14 @@ def receber_webhook():
         raw_body = request.get_data(as_text=True)
         print("Corpo bruto recebido:", raw_body)
 
-        # Se começar com "data=", remove isso
+        # Remove prefixo "data=" se houver
         if raw_body.startswith("data="):
             raw_body = raw_body[5:]
 
-        # Decodifica o conteúdo JSON (que estava como string dentro de 'data=')
+        # Converte string para JSON
         data = json.loads(raw_body)
         print("JSON limpo:", data)
+
         if not data:
             return jsonify({'erro': 'Nenhum dado recebido'}), 400
 
@@ -89,12 +90,14 @@ def receber_webhook():
 
         for item in notas:
             nota = item.get('notafiscal', {})
-            if nota.get('situacao') == 'Autorizada' and  nota.get('situacao') != "203789189":
+
+            # Inserir novo pedido se autorizado
+            if nota.get('situacao') == 'Autorizada' and nota.get('loja') != "203789189":
                 novo_pedido = Pedido(
-                    hora = datetime.now() - timedelta(hours=3),
+                    hora=datetime.now() - timedelta(hours=3),
                     id=int(nota.get('id')),
                     status=nota.get('situacao'),
-                    idloja= get_nome_loja_por_id(nota.get('loja')),
+                    idloja=get_nome_loja_por_id(nota.get('loja')),
                     chaveacesso=nota.get('chaveAcesso'),
                     nome=nota.get('cliente', {}).get('nome'),
                     numnfe=nota.get('numero')
@@ -107,16 +110,23 @@ def receber_webhook():
                     print(f"Salvo: {novo_pedido.id}")
                 else:
                     print(f"Já existe: {novo_pedido.id}")
-            if nota.get('situacao') ==  "Cancelada":
-                chave=nota.get('chaveAcesso')
+
+            # Atualizar pedidos se cancelada
+            elif nota.get('situacao') == "Cancelada":
+                chave = nota.get('chaveAcesso')
                 pedidos = Pedido.query.filter_by(chaveacesso=chave).all()
 
                 if not pedidos:
-                    return jsonify({'mensagem': 'Nenhum pedido encontrado com essa chave'}), 404
+                    print(f"Nenhum pedido encontrado para a chave {chave}")
+                    continue
 
                 for pedido in pedidos:
                     pedido.status = "Cancelado"
-                    return jsonify({'status': 'sucesso'}), 200
+
+                db.session.commit()
+                print(f"Pedidos com chave {chave} atualizados como Cancelado")
+
+        return jsonify({'status': 'Processamento concluído'}), 200
 
     except Exception as e:
         print('Erro ao processar webhook:', e)
