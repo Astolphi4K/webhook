@@ -125,7 +125,7 @@ def receber_webhook():
 
 @app.route('/pedidos')
 def listar_pedidos():
-    pedidos = Pedido.query.filter_by(status="Autorizada").all()
+    pedidos = Pedido.query.filter_by(status="Autorizada").order_by(desc(Pedido.hora)).all()
     return render_template('pedidos.html', pedidos=pedidos)
 
 @app.route('/bipar', methods=['POST'])
