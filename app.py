@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
 import json
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import desc
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://webhook_bling_user:9yH7z6LmIl9FBVTjlfmCE8LmdsRTlNjV@dpg-d1hf3iqdbo4c73dbgdqg-a.oregon-postgres.render.com/webhook_bling'
@@ -33,7 +33,40 @@ def limpar_pedidos():
     except Exception as e:
         db.session.rollback()
         return f"Erro ao deletar pedidos: {str(e)}"
-    
+
+def get_nome_loja_por_id(id_loja):
+    lojas = {
+        205389154: "AmazonFBA",
+        205074078: "Angeloni",
+        203614915: "B2W",
+        203630666: "Carrefour",
+        204860113: "Casa&Video",
+        204426107: "FastShop",
+        203742895: "Kabum",
+        205146734: "LLLoyalty",
+        204860094: "LeBiscuit",
+        203630664: "Mercado Livre",
+        203630663: "Magazine Luiza",
+        205024699 : "Netshoes",
+        204206885 :"NextShop",
+        204503878: "Olist",
+        204817223 :"Privalia",
+        205211252 : "Renner",
+        204621267 : "RiHappy",
+        204556538 : "Shein",
+        203954967: "Shopee",
+        205113356: "ShoppingBB",
+        204484960 :"Livelo",
+        205408211 :"TikTok",
+        203630665:"ViaVarejo",
+        205408232:"VinkLo",
+        205055610:"Zema",
+        205103397:"Zoom",
+        203861198 : "Candide",
+        205126496: "Funko"
+    }
+    return lojas.get(id_loja, "Loja desconhecida")
+
 @app.route('/webhook', methods=['POST'])
 def receber_webhook():
     try:
@@ -56,12 +89,12 @@ def receber_webhook():
 
         for item in notas:
             nota = item.get('notafiscal', {})
-            if nota.get('situacao') == 'Autorizada':
+            if nota.get('situacao') == 'Autorizada' and  nota.get('situacao') != "203789189":
                 novo_pedido = Pedido(
-                    hora=datetime.now(),
+                    hora = datetime.now() - timedelta(hours=3),
                     id=int(nota.get('id')),
                     status=nota.get('situacao'),
-                    idloja=nota.get('loja'),
+                    idloja= get_nome_loja_por_id(nota.get('loja')),
                     chaveacesso=nota.get('chaveAcesso'),
                     nome=nota.get('cliente', {}).get('nome'),
                     numnfe=nota.get('numero')
@@ -106,7 +139,7 @@ def bipar_pedido():
     db.session.commit()
 
     # Buscar todos os pedidos novamente para atualizar a tabela
-    pedidos_atualizados = Pedido.query.order_by(desc(Pedido.hora)).all()
+    pedidos_atualizados = Pedido.query.filter_by(status="Autorizada").all()
 
     pedidos_data = [{
         'id': p.id,
