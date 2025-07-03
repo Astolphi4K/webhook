@@ -24,6 +24,16 @@ class Pedido(db.Model):
     numnfe = db.Column(db.String(50), nullable=False)
 
 
+@app.route('/limpar_pedidos')
+def limpar_pedidos():
+    try:
+        num = db.session.query(Pedido).delete()  # apaga todas as linhas
+        db.session.commit()
+        return f"{num} pedidos deletados com sucesso!"
+    except Exception as e:
+        db.session.rollback()
+        return f"Erro ao deletar pedidos: {str(e)}"
+    
 @app.route('/webhook', methods=['POST'])
 def receber_webhook():
     try:
