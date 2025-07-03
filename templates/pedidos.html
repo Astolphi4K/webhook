@@ -57,7 +57,7 @@
     <script>
         document.getElementById("chave").addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
-        event.preventDefault();  // Evita o submit padrão
+        event.preventDefault();
         const chave = this.value;
 
         fetch("/bipar", {
@@ -69,13 +69,35 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
-            // Recarrega a página após bipar
-            window.location.reload();
+            if (data.pedidos) {
+                atualizarTabela(data.pedidos);
+                document.getElementById("chave").value = ""; // Limpa o input
+            } else {
+                alert(data.mensagem || "Erro ao bipar");
+            }
         })
         .catch(error => console.error("Erro:", error));
     }
 });
+
+function atualizarTabela(pedidos) {
+    const tbody = document.querySelector("#tabela-pedidos tbody");
+    tbody.innerHTML = ""; // Limpa a tabela
+
+    pedidos.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${p.hora}</td>
+            <td>${p.id}</td>
+            <td>${p.status}</td>
+            <td>${p.idloja}</td>
+            <td>${p.chaveacesso}</td>
+            <td>${p.nome}</td>
+            <td>${p.numnfe}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 </script>
 </body>
 </html>

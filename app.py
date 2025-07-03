@@ -4,6 +4,7 @@ from flask import render_template
 import json
 import psycopg2
 import datetime
+from sqlalchemy import desc
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://webhook_bling_user:9yH7z6LmIl9FBVTjlfmCE8LmdsRTlNjV@dpg-d1hf3iqdbo4c73dbgdqg-a.oregon-postgres.render.com/webhook_bling'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -93,6 +94,20 @@ def bipar_pedido():
         pedido.status = "Bipado"
 
     db.session.commit()
-    return jsonify({'mensagem': f'{len(pedidos)} pedido(s) bipado(s) com sucesso'}), 200
+
+    # Buscar todos os pedidos novamente para atualizar a tabela
+    pedidos_atualizados = Pedido.query.order_by(desc(Pedido.hora)).all()
+
+    pedidos_data = [{
+        'id': p.id,
+        'hora': p.hora.strftime('%d/%m/%Y %H:%M'),
+        'status': p.status,
+        'idloja': p.idloja,
+        'chaveacesso': p.chaveacesso,
+        'nome': p.nome,
+        'numnfe': p.numnfe
+    } for p in pedidos_atualizados]
+
+    return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data}), 200
 if __name__ == '__main__':
     app.run(debug=True)
