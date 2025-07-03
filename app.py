@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
 import json
 import psycopg2
-
+import datetime
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://webhook_bling_user:9yH7z6LmIl9FBVTjlfmCE8LmdsRTlNjV@dpg-d1hf3iqdbo4c73dbgdqg-a.oregon-postgres.render.com/webhook_bling'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -14,6 +14,7 @@ db = SQLAlchemy(app)
 class Pedido(db.Model):
     __tablename__ = 'pedidos'
 
+    hora = db.Column(db.DateTime, default=datetime.now, nullable=False)  # Nova coluna com data/hora atual
     id = db.Column(db.BigInteger, primary_key=True)  # ID da nota fiscal
     status = db.Column(db.String(50), nullable=False)
     idloja = db.Column(db.String(50), nullable=False)
@@ -46,6 +47,7 @@ def receber_webhook():
             nota = item.get('notafiscal', {})
             if nota.get('situacao') == 'Autorizada':
                 novo_pedido = Pedido(
+                    hora=datetime.datetime.now(),
                     id=int(nota.get('id')),
                     status=nota.get('situacao'),
                     idloja=nota.get('loja'),
@@ -71,10 +73,26 @@ def receber_webhook():
 
 @app.route('/pedidos')
 def listar_pedidos():
-    pedidos = Pedido.query.all()
-    print(pedidos)
+    pedidos = Pedido.query.filter_by(status="Autorizada").all()
     return render_template('pedidos.html', pedidos=pedidos)
 
+@app.route('/bipar', methods=['POST'])
+def bipar_pedido():
+    data = request.get_json()
+    chave = data.get('chave')
 
+    if not chave:
+        return jsonify({'erro': 'Chave de acesso não fornecida'}), 400
+
+    pedidos = Pedido.query.filter_by(chaveacesso=chave).all()
+
+    if not pedidos:
+        return jsonify({'mensagem': 'Nenhum pedido encontrado com essa chave'}), 404
+
+    for pedido in pedidos:
+        pedido.status = "Bipado"
+
+    db.session.commit()
+    return jsonify({'mensagem': f'{len(pedidos)} pedido(s) bipado(s) com sucesso'}), 200
 if __name__ == '__main__':
     app.run(debug=True)

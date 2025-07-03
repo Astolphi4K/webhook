@@ -20,6 +20,11 @@
 </head>
 <body>
     <h1>Pedidos Recebidos</h1>
+    <form method="POST" action="/bipar">
+    <label for="chave">Chave de Acesso:</label>
+    <input type="text" id="chave" name="chave" placeholder="Insira a chave e pressione Enter" style="width: 400px;">
+
+    </form>
     <table>
         <thead>
             <tr>
@@ -34,6 +39,7 @@
         <tbody>
             {% for pedido in pedidos %}
             <tr>
+                <td>{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>{{ pedido.id }}</td>
                 <td>{{ pedido.status }}</td>
                 <td>{{ pedido.idloja }}</td>
@@ -48,5 +54,28 @@
             {% endfor %}
         </tbody>
     </table>
+    <script>
+        document.getElementById("chave").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();  // Evita o submit padrão
+        const chave = this.value;
+
+        fetch("/bipar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ chave: chave })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            // Recarrega a página após bipar
+            window.location.reload();
+        })
+        .catch(error => console.error("Erro:", error));
+    }
+});
+</script>
 </body>
 </html>
