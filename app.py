@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 class Pedido(db.Model):
     __tablename__ = 'pedidos'
 
-    hora = db.Column(db.DateTime, default=datetime.now, nullable=False)  # Nova coluna com data/hora atual
+    hora = db.Column(db.DateTime, nullable=False)  # Nova coluna com data/hora atual
     id = db.Column(db.BigInteger, primary_key=True)  # ID da nota fiscal
     status = db.Column(db.String(50), nullable=False)
     idloja = db.Column(db.String(50), nullable=False)
@@ -58,7 +58,7 @@ def receber_webhook():
             nota = item.get('notafiscal', {})
             if nota.get('situacao') == 'Autorizada':
                 novo_pedido = Pedido(
-                    hora=datetime.datetime.now(),
+                    hora=datetime.now(),
                     id=int(nota.get('id')),
                     status=nota.get('situacao'),
                     idloja=nota.get('loja'),
