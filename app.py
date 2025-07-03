@@ -107,8 +107,16 @@ def receber_webhook():
                     print(f"Salvo: {novo_pedido.id}")
                 else:
                     print(f"Já existe: {novo_pedido.id}")
+            if nota.get('situacao') ==  "Cancelada":
+                chave=nota.get('chaveAcesso')
+                pedidos = Pedido.query.filter_by(chaveacesso=chave).all()
 
-        return jsonify({'status': 'sucesso'}), 200
+                if not pedidos:
+                    return jsonify({'mensagem': 'Nenhum pedido encontrado com essa chave'}), 404
+
+                for pedido in pedidos:
+                    pedido.status = "Cancelado"
+                    return jsonify({'status': 'sucesso'}), 200
 
     except Exception as e:
         print('Erro ao processar webhook:', e)

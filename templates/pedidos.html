@@ -8,6 +8,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            align-items: center;
         }
         th, td {
             padding: 8px 12px;
@@ -19,7 +20,7 @@
     </style>
 </head>
 <body>
-    <h1>Pedidos Recebidos</h1>
+    <h1>Pedidos Faturados</h1>
     <form method="POST" action="/bipar">
     <label for="chave">Chave de Acesso:</label>
     <input type="text" id="chave" name="chave" placeholder="Insira a chave e pressione Enter" style="width: 400px;">
@@ -31,7 +32,7 @@
                 <th>Data</th>
                 <th>ID</th>
                 <th>Status</th>
-                <th>ID Loja</th>
+                <th>Loja</th>
                 <th>Chave de Acesso</th>
                 <th>Nome</th>
                 <th>Num. NFe</th>
@@ -74,7 +75,9 @@
                 atualizarTabela(data.pedidos);
                 document.getElementById("chave").value = ""; // Limpa o input
             } else {
+                document.getElementById("chave").value = "";
                 alert(data.mensagem || "Erro ao bipar");
+
             }
         })
         .catch(error => console.error("Erro:", error));
@@ -99,6 +102,10 @@ function atualizarTabela(pedidos) {
         tbody.appendChild(tr);
     });
 }
+
+ setInterval(function () {
+        location.reload();
+    }, 180000); // Atualizar a página a cada 3 minutos
 </script>
 </body>
 </html>
