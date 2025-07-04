@@ -83,22 +83,20 @@ def receber_webhook():
 
         if not data:
             return jsonify({'erro': 'Nenhum dado recebido'}), 400
-
         print('DATA DECODIFICADO:', data)
-
         notas = data.get('retorno', {}).get('notasfiscais', [])
 
         for item in notas:
             nota = item.get('notafiscal', {})
 
             # Inserir novo pedido se autorizado
-            if nota.get('situacao') == 'Autorizada' or nota.get('situacao') == 'Enviada - Aguardando protocolo' and nota.get('loja') != "203789189":
+            if nota.get('situacao') in ['Autorizada', 'Enviada - Aguardando protocolo'] and nota.get('loja') != "203789189":
                 situacao = nota.get('situacao')
 
                 if situacao in ['Enviada - Aguardando protocolo', 'Autorizada']:
                     status = 'Autorizada'
                 else:
-                    status = 'Indefinido'  # Ou outro valor padrão
+                    status = 'Indefinido' 
                     
                 novo_pedido = Pedido(
                     hora=datetime.now() - timedelta(hours=3),
