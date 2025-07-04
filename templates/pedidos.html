@@ -86,6 +86,7 @@
 </head>
 <body>
     <h1>Pedidos Faturados</h1>
+    <h2 id="contador-pedidos">Total: {{ total_pedidos }}</h2>
     <form method="POST" action="/bipar">
     <label for="chave">Chave de Acesso:</label>
     <input type="text" id="chave" name="chave" placeholder="Insira a chave e pressione Enter" style="width: 400px;">
@@ -138,7 +139,9 @@
         .then(data => {
             if (data.pedidos) {
                 atualizarTabela(data.pedidos);
+                document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
                 document.getElementById("chave").value = ""; // Limpa o input
+                
             } else {
                 document.getElementById("chave").value = "";
                 alert(data.mensagem || "Erro ao bipar");

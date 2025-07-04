@@ -92,11 +92,13 @@ def receber_webhook():
             nota = item.get('notafiscal', {})
 
             # Inserir novo pedido se autorizado
-            if nota.get('situacao') == 'Autorizada' and nota.get('loja') != "203789189":
+            if nota.get('situacao') == 'Autorizada' or nota.get('situacao') == 'Enviada - Aguardando protocolo' and nota.get('loja') != "203789189":
+                if nota.get('situacao') == 'Enviada - Aguardando protocolo':
+                    status = "Autorizada"
                 novo_pedido = Pedido(
                     hora=datetime.now() - timedelta(hours=3),
                     id=int(nota.get('id')),
-                    status=nota.get('situacao'),
+                    status=status,
                     idloja=get_nome_loja_por_id(nota.get('loja')),
                     chaveacesso=nota.get('chaveAcesso'),
                     nome=nota.get('cliente', {}).get('nome'),
@@ -136,7 +138,9 @@ def receber_webhook():
 @app.route('/pedidos')
 def listar_pedidos():
     pedidos = Pedido.query.filter_by(status="Autorizada").order_by(desc(Pedido.hora)).all()
-    return render_template('pedidos.html', pedidos=pedidos)
+    total_pedidos = len(pedidos)
+    return render_template('pedidos.html', pedidos=pedidos, total_pedidos=total_pedidos)
+  
 
 @app.route('/bipar', methods=['POST'])
 def bipar_pedido():
@@ -158,7 +162,7 @@ def bipar_pedido():
 
     # Buscar todos os pedidos novamente para atualizar a tabela
     pedidos_atualizados = Pedido.query.filter_by(status="Autorizada").all()
-
+    total_pedidos = len(pedidos_atualizados)
     pedidos_data = [{
         'id': p.id,
         'hora': p.hora.strftime('%d/%m/%Y %H:%M'),
@@ -169,6 +173,6 @@ def bipar_pedido():
         'numnfe': p.numnfe
     } for p in pedidos_atualizados]
 
-    return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data}), 200
+    return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data,  'total_pedidos':total_pedidos}), 200
 if __name__ == '__main__':
     app.run(debug=True)
