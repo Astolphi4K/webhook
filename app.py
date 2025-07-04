@@ -93,8 +93,13 @@ def receber_webhook():
 
             # Inserir novo pedido se autorizado
             if nota.get('situacao') == 'Autorizada' or nota.get('situacao') == 'Enviada - Aguardando protocolo' and nota.get('loja') != "203789189":
-                if nota.get('situacao') == 'Enviada - Aguardando protocolo':
-                    status = "Autorizada"
+                situacao = nota.get('situacao')
+
+                if situacao in ['Enviada - Aguardando protocolo', 'Autorizada']:
+                    status = 'Autorizada'
+                else:
+                    status = 'Indefinido'  # Ou outro valor padrão
+                    
                 novo_pedido = Pedido(
                     hora=datetime.now() - timedelta(hours=3),
                     id=int(nota.get('id')),
