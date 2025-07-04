@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Pedidos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f8;
+            margin-left: 240px;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        form {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        select, button {
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/relatorio">Relatório</a></li>
+            <li><a href="/pedidos">Pedidos</a></li>
+        </ul>
+    </div>
+
+    <h1>Relatório de Pedidos</h1>
+
+    <form method="POST" action="/relatorio">
+        <select name="marketplace">
+            <option value="">-- Marketplace --</option>
+            {% for loja in marketplaces %}
+                <option value="{{ loja }}">{{ loja }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="status">
+            <option value="">-- Status --</option>
+            {% for status in status_list %}
+                <option value="{{ status }}">{{ status }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="date" name="data_inicial" placeholder="Data inicial">
+        <input type="date" name="data_final" placeholder="Data final">
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <!-- Novo formulário só para download -->
+    <form method="POST" action="/download_relatorio">
+        <input type="hidden" name="marketplace" value="{{ request.form.marketplace }}">
+        <input type="hidden" name="status" value="{{ request.form.status }}">
+        <input type="hidden" name="data_inicial" value="{{ request.form.data_inicial }}">
+        <input type="hidden" name="data_final" value="{{ request.form.data_final }}">
+        <button type="submit">Download Excel</button>
+    </form>
+
+
+    {% if pedidos %}
+    <table>
+        <thead>
+            <tr>
+                <th>NF-e</th>
+                <th>Marketplace</th>
+                <th>SKU</th>
+                <th>Quantidade</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pedidos %}
+            <tr>
+                <td>{{ p.nfe }}</td>
+                <td>{{ p.marketplace }}</td>
+                <td>{{ p.sku }}</td>
+                <td>{{ p.quantidade }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">Nenhum resultado encontrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>Nenhum pedido encontrado.</p>
+    {% endif %}
+</body>
+</html>

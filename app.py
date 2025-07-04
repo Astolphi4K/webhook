@@ -6,12 +6,47 @@ import psycopg2
 from datetime import datetime, timedelta
 from sqlalchemy import desc
 app = Flask(__name__)
+import pandas as pd
+from flask import send_file
+from io import BytesIO
+import requests
+import xml.etree.ElementTree as ET
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://webhook_bling_user:9yH7z6LmIl9FBVTjlfmCE8LmdsRTlNjV@dpg-d1hf3iqdbo4c73dbgdqg-a.oregon-postgres.render.com/webhook_bling'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+def extrair_itens_xml(xml_url):
+    try:
+        # Faz download do XML
+        response = requests.get(xml_url)
+        response.raise_for_status()  # erro se não for 200
 
+        # Faz parsing do XML
+        root = ET.fromstring(response.content)
+
+        # Lista para armazenar os itens extraídos
+        itens = []
+
+        # Procura todos os elementos <det> (cada item da nota)
+        for det in root.findall('.//det'):
+            prod = det.find('prod')
+            if prod is not None:
+                cProd = prod.findtext('cProd')
+                qCom = prod.findtext('qCom')
+
+                itens.append({
+                    'codigo_produto': cProd,
+                    'quantidade': float(qCom.replace(',', '.')) if qCom else 0
+                })
+
+        return itens
+
+    except Exception as e:
+        print(f"Erro ao processar XML: {e}")
+        return []
+    
 class Pedido(db.Model):
     __tablename__ = 'pedidos'
 
@@ -23,6 +58,15 @@ class Pedido(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     numnfe = db.Column(db.String(50), nullable=False)
 
+class ItemPedido(db.Model):
+    __tablename__ = 'itens_pedido'
+
+    id = db.Column(db.Integer, primary_key=True)
+    pedido_id = db.Column(db.BigInteger, db.ForeignKey('pedidos.id'), nullable=False)
+    codigo_produto = db.Column(db.String(50), nullable=False)
+    quantidade = db.Column(db.Float, nullable=False)
+
+    pedido = db.relationship('Pedido', backref=db.backref('itens', cascade="all, delete-orphan"))
 
 @app.route('/limpar_pedidos')
 def limpar_pedidos():
@@ -68,36 +112,29 @@ def get_nome_loja_por_id(id_loja):
     return lojas.get(id_loja, "Loja desconhecida")
 
 @app.route('/webhook', methods=['POST'])
+@app.route("/webhook", methods=["POST"])
 def receber_webhook():
     try:
         raw_body = request.get_data(as_text=True)
         print("Corpo bruto recebido:", raw_body)
 
-        # Remove prefixo "data=" se houver
         if raw_body.startswith("data="):
             raw_body = raw_body[5:]
 
-        # Converte string para JSON
         data = json.loads(raw_body)
         print("JSON limpo:", data)
 
         if not data:
             return jsonify({'erro': 'Nenhum dado recebido'}), 400
-        print('DATA DECODIFICADO:', data)
+
         notas = data.get('retorno', {}).get('notasfiscais', [])
 
         for item in notas:
             nota = item.get('notafiscal', {})
 
-            # Inserir novo pedido se autorizado
             if nota.get('situacao') in ['Autorizada', 'Enviada - Aguardando protocolo'] and nota.get('loja') != "203789189":
-                situacao = nota.get('situacao')
+                status = 'Autorizada'
 
-                if situacao in ['Enviada - Aguardando protocolo', 'Autorizada']:
-                    status = 'Autorizada'
-                else:
-                    status = 'Indefinido' 
-                    
                 novo_pedido = Pedido(
                     hora=datetime.now() - timedelta(hours=3),
                     id=int(nota.get('id')),
@@ -113,10 +150,26 @@ def receber_webhook():
                     db.session.add(novo_pedido)
                     db.session.commit()
                     print(f"Salvo: {novo_pedido.id}")
+
+                    xml_url = nota.get('xml')
+                    if xml_url:
+                        itens_xml  = extrair_itens_xml(xml_url)
+                        print(f"Itens extraídos para pedido {novo_pedido.id}: {itens_xml}")
+                        for item_xml in itens_xml:
+                            novo_item = ItemPedido(
+                                pedido_id=novo_pedido.id,
+                                codigo_produto=item_xml['codigo_produto'],
+                                quantidade=item_xml['quantidade']
+                            )
+                            db.session.add(novo_item)
+
+                        db.session.commit()
+
+                        db.session.commit()
+
                 else:
                     print(f"Já existe: {novo_pedido.id}")
 
-            # Atualizar pedidos se cancelada
             elif nota.get('situacao') == "Cancelada":
                 chave = nota.get('chaveAcesso')
                 pedidos = Pedido.query.filter_by(chaveacesso=chave).all()
@@ -136,6 +189,7 @@ def receber_webhook():
     except Exception as e:
         print('Erro ao processar webhook:', e)
         return jsonify({'erro': str(e)}), 500
+
 
 
 @app.route('/pedidos')
@@ -177,5 +231,133 @@ def bipar_pedido():
     } for p in pedidos_atualizados]
 
     return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data,  'total_pedidos':total_pedidos}), 200
+
+@app.route('/relatorio', methods=['GET', 'POST'])
+def relatorio():
+    marketplaces = db.session.query(Pedido.idloja).distinct().all()
+    status_list = db.session.query(Pedido.status).distinct().all()
+
+    marketplaces = [m[0] for m in marketplaces]
+    status_list = [s[0] for s in status_list]
+
+    relatorio_detalhado = []
+
+    if request.method == 'POST':
+        selected_marketplace = request.form.get('marketplace')
+        selected_status = request.form.get('status')
+        data_inicial = request.form.get('data_inicial')
+        data_final = request.form.get('data_final')
+
+        query = Pedido.query
+
+        if selected_marketplace:
+            query = query.filter_by(idloja=selected_marketplace)
+
+        if selected_status:
+            query = query.filter_by(status=selected_status)
+
+        if data_inicial:
+            try:
+                dt_ini = datetime.strptime(data_inicial, "%Y-%m-%d")
+                query = query.filter(Pedido.hora >= dt_ini)
+            except ValueError:
+                pass
+
+        if data_final:
+            try:
+                dt_fim = datetime.strptime(data_final, "%Y-%m-%d")
+                dt_fim = dt_fim.replace(hour=23, minute=59, second=59)
+                query = query.filter(Pedido.hora <= dt_fim)
+            except ValueError:
+                pass
+
+        pedidos = query.order_by(Pedido.hora.desc()).all()
+
+        for pedido in pedidos:
+            for item in pedido.itens:
+                relatorio_detalhado.append({
+                    'nfe': pedido.numnfe,
+                    'marketplace': pedido.idloja,
+                    'sku': item.codigo_produto,
+                    'quantidade': item.quantidade
+                })
+
+    return render_template(
+        'relatorio.html',
+        marketplaces=marketplaces,
+        status_list=status_list,
+        pedidos=relatorio_detalhado
+    )
+
+
+
+@app.route('/dashboard')
+def dashboard():
+    total = Pedido.query.count()
+    cancelados = Pedido.query.filter_by(status="Cancelado").count()
+    autorizados = Pedido.query.filter_by(status="Autorizada").count()
+    bipados = Pedido.query.filter_by(status="Bipado").count()
+    
+    return render_template('dashboard.html', total=total, cancelados=cancelados, autorizados=autorizados, bipados=bipados)
+
+
+@app.route('/download_relatorio', methods=['POST'])
+def download_relatorio():
+    selected_marketplace = request.form.get('marketplace')
+    selected_status = request.form.get('status')
+    data_inicial = request.form.get('data_inicial')
+    data_final = request.form.get('data_final')
+
+    query = Pedido.query
+
+    if selected_marketplace:
+        query = query.filter_by(idloja=selected_marketplace)
+
+    if selected_status:
+        query = query.filter_by(status=selected_status)
+
+    if data_inicial:
+        try:
+            dt_ini = datetime.strptime(data_inicial, "%Y-%m-%d")
+            query = query.filter(Pedido.hora >= dt_ini)
+        except ValueError:
+            pass
+
+    if data_final:
+        try:
+            dt_fim = datetime.strptime(data_final, "%Y-%m-%d")
+            dt_fim = dt_fim.replace(hour=23, minute=59, second=59)
+            query = query.filter(Pedido.hora <= dt_fim)
+        except ValueError:
+            pass
+
+    pedidos = query.all()
+
+    # Convertendo para DataFrame
+    df = pd.DataFrame([{
+        "Data": p.hora.strftime("%d/%m/%Y %H:%M"),
+        "ID": p.id,
+        "Status": p.status,
+        "Loja": p.idloja,
+        "Chave de Acesso": p.chaveacesso,
+        "Nome": p.nome,
+        "Num. NFe": p.numnfe
+    } for p in pedidos])
+
+    # Criar Excel em memória
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Relatorio')
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name='relatorio_pedidos.xlsx',
+        as_attachment=True,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
 if __name__ == '__main__':
     app.run(debug=True)

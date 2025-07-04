@@ -57,7 +57,7 @@
         }
 
         th {
-            background-color: #3498db;
+            background-color: #2c3e50;
             color: white;
             text-align: left;
             padding: 12px 16px;
@@ -82,9 +82,60 @@
             color: #999;
             padding: 20px;
         }
+        .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 100%;
+        background-color: #2c3e50;
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        color: white;
+        }
+
+        .sidebar h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ecf0f1;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            margin-bottom: 15px;
+        }
+
+        .sidebar ul li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        .sidebar ul li a:hover {
+            color: #3498db;
+        }
+
+        /* Ajuste do conteúdo da página para não ficar sob o menu */
+        body {
+            margin-left: 240px;
+        }
+
     </style>
 </head>
 <body>
+    <div class="sidebar">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="/pedidos">Pedidos</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/relatorio">Relatório</a></li>
+        </ul>
+    </div>
     <h1>Pedidos Faturados</h1>
     <h2 id="contador-pedidos">Total: {{ total_pedidos }}</h2>
     <form method="POST" action="/bipar">
