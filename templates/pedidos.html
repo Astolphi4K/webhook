@@ -138,9 +138,11 @@
     </div>
     <h1>Pedidos Faturados</h1>
     <h2 id="contador-pedidos">Total: {{ total_pedidos }}</h2>
-    <form method="POST" action="/bipar">
-    <label for="chave">Chave de Acesso:</label>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <label for="chave">Chave de Acesso:</label>
     <input type="text" id="chave" name="chave" placeholder="Insira a chave e pressione Enter" style="width: 400px;">
+</div>
+</div>
 
     </form>
     <table id="tabela-pedidos">
@@ -174,34 +176,45 @@
         </tbody>
     </table>
     <script>
-        document.getElementById("chave").addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        const chave = this.value;
+       document.getElementById("chave").addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                const chave = this.value;
 
-        fetch("/bipar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ chave: chave })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.pedidos) {
-                atualizarTabela(data.pedidos);
-                document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
-                document.getElementById("chave").value = ""; // Limpa o input
-                
-            } else {
-                document.getElementById("chave").value = "";
-                alert(data.mensagem || "Erro ao bipar");
+                fetch("/bipar", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ chave: chave })
+                })
+                .then(async response => {
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        mostrarNotificacao("Resposta inválida do servidor (não é JSON)", "red");
+                        return;
+                    }
 
+                    if (response.ok) {
+                        console.log("Mensagem de erro recebida:", data);
+                        atualizarTabela(data.pedidos);
+                        document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
+                        mostrarNotificacao(data.mensagem || "Sucesso!", "green");
+                    } else {
+                         console.log("Mensagem de erro recebida:", data);
+                        mostrarNotificacao(data.erro || data.mensagem || "Erro ao bipar", "red");
+                    }
+
+                    document.getElementById("chave").value = "";
+                })
+                .catch(error => {
+                    console.error("Erro:", error);
+                    mostrarNotificacao("Erro ao conectar com o servidor ou resposta inválida", "red");
+                });
             }
-        })
-        .catch(error => console.error("Erro:", error));
-    }
-});
+        });
 
 function atualizarTabela(pedidos) {
     const tbody = document.querySelector("#tabela-pedidos tbody");
@@ -222,9 +235,24 @@ function atualizarTabela(pedidos) {
     });
 }
 
- setInterval(function () {
-        location.reload();
-    }, 180000); // Atualizar a página a cada 3 minutos
+ //setInterval(function () {
+ //       location.reload();
+ //  }, 180000); // Atualizar a página a cada 3 minutos
+
+    function mostrarNotificacao(mensagem, cor) {
+            const notificacao = document.getElementById("notificacao");
+            notificacao.textContent = mensagem;
+            notificacao.style.backgroundColor = cor;
+            notificacao.style.display = "block";
+
+            setTimeout(() => {
+                notificacao.style.display = "none";
+            }, 3000);
+        }
 </script>
+
+<div id="notificacao" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%);
+padding: 10px 20px; border-radius: 5px; color: white; font-weight: bold; z-index: 9999; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
+</div>
 </body>
 </html>

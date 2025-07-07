@@ -11,10 +11,13 @@
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f6f8;
             display: flex;
-        }
+            justify-content: center; /* centraliza horizontalmente */
+            align-items: center;     /* centraliza verticalmente */
+            height: 100vh;           /* altura total da viewport */
+            margin: 0;               /* remove margens padrão */
+            background-color: #f0f2f5; /* opcional: fundo claro */
+            }
 
         .sidebar {
             width: 240px;
@@ -64,15 +67,19 @@
         }
 
         h1 {
+            
             color: #2c3e50;
             font-size: 32px;
             margin-bottom: 30px;
         }
 
+        
         .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        width: 90%; /* ou um max-width fixo, ex: 1200px */
+        max-width: 1200px;
         }
 
         .card {
