@@ -8,6 +8,7 @@ from sqlalchemy import desc
 app = Flask(__name__)
 import pandas as pd
 from flask import send_file
+from sqlalchemy import or_, desc
 from io import BytesIO
 import requests
 import xml.etree.ElementTree as ET
@@ -194,7 +195,12 @@ def receber_webhook():
 
 @app.route('/pedidos')
 def listar_pedidos():
-    pedidos = Pedido.query.filter_by(status="Autorizada").order_by(desc(Pedido.hora)).all()
+    pedidos = Pedido.query.filter(
+    or_(
+        Pedido.status == "Autorizada",
+        Pedido.status == "Buffered"
+    )
+).order_by(desc(Pedido.hora)).all()
     total_pedidos = len(pedidos)
     return render_template('pedidos.html', pedidos=pedidos, total_pedidos=total_pedidos)
   
