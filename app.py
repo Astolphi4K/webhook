@@ -23,10 +23,10 @@ def extrair_itens_xml(xml_url):
         # Faz download do XML
         response = requests.get(xml_url)
         response.raise_for_status()  # erro se não for 200
-
+        print(response.text)
         # Faz parsing do XML
         root = ET.fromstring(response.content)
-
+        print(root)
         # Lista para armazenar os itens extraídos
         itens = []
 
@@ -35,6 +35,7 @@ def extrair_itens_xml(xml_url):
             prod = det.find('prod')
             if prod is not None:
                 cProd = prod.findtext('cProd')
+                print(cProd)
                 qCom = prod.findtext('qCom')
 
                 itens.append({
