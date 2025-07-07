@@ -4,11 +4,11 @@ from flask import render_template
 import json
 import psycopg2
 from datetime import datetime, timedelta
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 app = Flask(__name__)
 import pandas as pd
 from flask import send_file
-from sqlalchemy import or_, desc
+from sqlalchemy import or_
 from io import BytesIO
 import requests
 import xml.etree.ElementTree as ET
@@ -112,7 +112,7 @@ def get_nome_loja_por_id(id_loja):
     }
     return lojas.get(id_loja, "Loja desconhecida")
 
-@app.route('/webhook', methods=['POST'])
+
 @app.route("/webhook", methods=["POST"])
 def receber_webhook():
     try:
@@ -200,7 +200,7 @@ def listar_pedidos():
         Pedido.status == "Autorizada",
         Pedido.status == "Buffered"
     )
-).order_by(desc(Pedido.hora)).all()
+).order_by(asc(Pedido.status)).all()
     total_pedidos = len(pedidos)
     return render_template('pedidos.html', pedidos=pedidos, total_pedidos=total_pedidos)
   
