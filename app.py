@@ -218,12 +218,17 @@ def bipar_pedido():
     if not pedidos:
         return jsonify({'mensagem': 'Nenhum pedido encontrado com essa chave'}), 404
 
+    # Verifica se algum pedido já está como Bipado
+    if any(p.status == "Bipado" for p in pedidos):
+        return jsonify({'erro': 'Pedido já está com status Bipado'}), 400
+
+    # Atualiza os pedidos
     for pedido in pedidos:
         pedido.status = "Bipado"
 
     db.session.commit()
 
-    # Buscar todos os pedidos novamente para atualizar a tabela
+    # Atualiza a tabela com pedidos autorizados
     pedidos_atualizados = Pedido.query.filter_by(status="Autorizada").all()
     total_pedidos = len(pedidos_atualizados)
     pedidos_data = [{
@@ -236,7 +241,8 @@ def bipar_pedido():
         'numnfe': p.numnfe
     } for p in pedidos_atualizados]
 
-    return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data,  'total_pedidos':total_pedidos}), 200
+    return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data, 'total_pedidos': total_pedidos}), 200
+
 
 @app.route('/relatorio', methods=['GET', 'POST'])
 def relatorio():
@@ -295,6 +301,26 @@ def relatorio():
         pedidos=relatorio_detalhado
     )
 
+@app.route('/buffer_status', methods=['POST'])
+def buffer_status():
+    data = request.get_json()
+    pedido_id = data.get('id')
+
+    if not pedido_id:
+        return jsonify({'erro': 'ID do pedido não fornecido'}), 400
+
+    pedido = Pedido.query.get(pedido_id)
+
+    if not pedido:
+        return jsonify({'erro': 'Pedido não encontrado'}), 404
+
+    if pedido.status != "Autorizada":
+        return jsonify({'erro': f'O pedido está com status "{pedido.status}", não pode ser alterado.'}), 400
+
+    pedido.status = "Buffered"
+    db.session.commit()
+
+    return jsonify({'mensagem': f'Pedido {pedido_id} atualizado para Buffered com sucesso.'}), 200
 
 
 @app.route('/dashboard')
