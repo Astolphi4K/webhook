@@ -229,7 +229,12 @@ def bipar_pedido():
     db.session.commit()
 
     # Atualiza a tabela com pedidos autorizados
-    pedidos_atualizados = Pedido.query.filter_by(status="Autorizada").all()
+    pedidos_atualizados = Pedido.query.filter(
+    or_(
+        Pedido.status == "Autorizada",
+        Pedido.status == "Buffered"
+    )
+    ).order_by(asc(Pedido.status)).all()
     total_pedidos = len(pedidos_atualizados)
     pedidos_data = [{
         'id': p.id,
