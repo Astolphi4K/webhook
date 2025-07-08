@@ -20,33 +20,33 @@ db = SQLAlchemy(app)
 
 def extrair_itens_xml(xml_url):
     try:
-        # Faz download do XML
         response = requests.get(xml_url)
-        response.raise_for_status()  # erro se não for 200
-        print(response.text)
+        response.raise_for_status()
+
+        # Define o namespace da NFe
+        ns = {'nfe': 'http://www.portalfiscal.inf.br/nfe'}
+
         # Faz parsing do XML
         root = ET.fromstring(response.content)
-        print(root)
-        # Lista para armazenar os itens extraídos
+
         itens = []
 
-        # Procura todos os elementos <det> (cada item da nota)
-        for det in root.findall('.//det'):
-            prod = det.find('prod')
+        # Percorre os elementos <det> com namespace
+        for det in root.findall('.//nfe:det', ns):
+            prod = det.find('nfe:prod', ns)
             if prod is not None:
-                cProd = prod.findtext('cProd')
-                print(cProd)
-                qCom = prod.findtext('qCom')
+                cProd = prod.findtext('nfe:cProd', default='', namespaces=ns)
+                qCom = prod.findtext('nfe:qCom', default='0', namespaces=ns)
 
                 itens.append({
-                    'codigo_produto': cProd,
-                    'quantidade': float(qCom.replace(',', '.')) if qCom else 0
+                    'codigo_produto': cProd.strip(),
+                    'quantidade': float(qCom.replace(',', '.'))
                 })
 
         return itens
 
     except Exception as e:
-        print(f"Erro ao processar XML: {e}")
+        print("Erro ao processar XML:", e)
         return []
     
 class Pedido(db.Model):

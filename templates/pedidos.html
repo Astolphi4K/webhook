@@ -124,6 +124,18 @@
         body {
             margin-left: 240px;
         }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            color: #fff;
+        }
+        .autorizada  { background-color: #2ecc71; }
+        .cancelado   { background-color: #f1c40f; color: #333; }
+        .buffered    { background-color: #3498db; }
+        .bipado      { background-color: #9b59b6; }
 
     </style>
 </head>
@@ -162,7 +174,9 @@
             <tr>
                 <td>{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>{{ pedido.id }}</td>
-                <td>{{ pedido.status }}</td>
+                <td>
+                <span class="status {{ pedido.status|lower }}">{{ pedido.status }}</span>
+                </td>
                 <td>{{ pedido.idloja }}</td>
                 <td>{{ pedido.chaveacesso }}</td>
                 <td>{{ pedido.nome }}</td>
@@ -198,12 +212,10 @@
                     }
 
                     if (response.ok) {
-                        console.log("Mensagem de erro recebida:", data);
                         atualizarTabela(data.pedidos);
                         document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
                         mostrarNotificacao(data.mensagem || "Sucesso!", "green");
                     } else {
-                         console.log("Mensagem de erro recebida:", data);
                         mostrarNotificacao(data.erro || data.mensagem || "Erro ao bipar", "red");
                     }
 
@@ -222,18 +234,32 @@ function atualizarTabela(pedidos) {
 
     pedidos.forEach(p => {
         const tr = document.createElement("tr");
+
+        const statusSpan = document.createElement("span");
+        statusSpan.classList.add("status");
+
+        // Normaliza para minúsculo
+        const statusFormatado = p.status.toLowerCase();
+        statusSpan.classList.add(statusFormatado);
+        statusSpan.textContent = p.status;
+
         tr.innerHTML = `
             <td>${p.hora}</td>
             <td>${p.id}</td>
-            <td>${p.status}</td>
+            <td></td>
             <td>${p.idloja}</td>
             <td>${p.chaveacesso}</td>
             <td>${p.nome}</td>
             <td>${p.numnfe}</td>
         `;
+
+        tr.children[2].appendChild(statusSpan);
         tbody.appendChild(tr);
     });
 }
+
+
+
 
  //setInterval(function () {
  //       location.reload();
