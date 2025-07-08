@@ -134,7 +134,7 @@ def receber_webhook():
         for item in notas:
             nota = item.get('notafiscal', {})
 
-            if nota.get('situacao') in ['Autorizada', 'Enviada - Aguardando protocolo'] and nota.get('loja') != "203789189":
+            if nota.get('situacao') in ['Autorizada', 'Enviada - Aguardando protocolo'] and nota.get('loja') != "203789189" and nota.get('tipo') == "S":
                 status = 'Autorizada'
 
                 novo_pedido = Pedido(
