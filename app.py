@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask import render_template
+from flask import render_template, redirect
 import json
 import psycopg2
 from datetime import datetime, timedelta
@@ -69,6 +69,110 @@ class ItemPedido(db.Model):
     quantidade = db.Column(db.Float, nullable=False)
 
     pedido = db.relationship('Pedido', backref=db.backref('itens', cascade="all, delete-orphan"))
+
+class VariacaoProduto(db.Model):
+    __tablename__ = 'variacoes_produto'
+    id = db.Column(db.Integer, primary_key=True)
+    codigo_variado = db.Column(db.String, unique=True, nullable=False)  # ex: 3599A, 1915K71
+    codigos_base = db.Column(db.String, nullable=False)  # ex: 3599, ou "1971,1915"
+    endereco = db.Column(db.String, nullable=True)  # opcional: ex: "A01-B01"
+
+# ROTA PRINCIPAL
+@app.route("/variacoes", methods=["GET", "POST"])
+def gerenciar_variacoes():
+    if request.method == "POST":
+        id_edit = request.form.get("id")
+        codigo_variado = request.form["codigo_variado"].strip().upper()
+        codigos_base = request.form["codigos_base"].strip()
+        endereco = request.form.get("endereco", "").strip()
+
+        if id_edit:
+            variacao = VariacaoProduto.query.get(id_edit)
+            if variacao:
+                variacao.codigo_variado = codigo_variado
+                variacao.codigos_base = codigos_base
+                variacao.endereco = endereco
+        else:
+            nova = VariacaoProduto(
+                codigo_variado=codigo_variado,
+                codigos_base=codigos_base,
+                endereco=endereco
+            )
+            db.session.add(nova)
+
+        db.session.commit()
+        return redirect("/variacoes")
+
+    variacoes = VariacaoProduto.query.order_by(VariacaoProduto.codigo_variado).all()
+    return render_template("variacoes.html", variacoes=variacoes)
+
+
+# EXCLUIR
+@app.route("/variacoes/excluir/<int:id>", methods=["POST"])
+def excluir_variacao(id):
+    variacao = db.session.get(VariacaoProduto, id)
+    if not variacao:
+        return "Variação não encontrada", 404
+    try:
+        db.session.delete(variacao)
+        db.session.commit()
+        return redirect("/variacoes")
+    except Exception as e:
+        db.session.rollback()
+        return f"Erro ao excluir: {str(e)}", 500
+
+
+# IMPORTAR PLANILHA
+@app.route("/variacoes/importar", methods=["POST"])
+def importar_planilha():
+    file = request.files.get("arquivo")
+    if file:
+        df = pd.read_excel(file)
+
+        for _, row in df.iterrows():
+            codigo = str(row.get("CÓDIGO", "")).strip()
+            endereco = str(row.get("ENDEREÇO", "")).strip() if "ENDEREÇO" in df.columns else None
+
+            # Coletar os SKUs base, ignorando colunas 'CÓDIGO' e 'ENDEREÇO'
+            bases = [
+                str(row[col]).strip()
+                for col in df.columns
+                if col not in ["CÓDIGO", "ENDEREÇO"] and pd.notna(row[col])
+            ]
+
+            if codigo and bases:
+                existente = VariacaoProduto.query.filter_by(codigo_variado=codigo).first()
+                if existente:
+                    existente.codigos_base = ",".join(bases)
+                    existente.endereco = endereco
+                else:
+                    nova = VariacaoProduto(
+                        codigo_variado=codigo,
+                        codigos_base=",".join(bases),
+                        endereco=endereco
+                    )
+                    db.session.add(nova)
+        db.session.commit()
+    return redirect("/variacoes")
+
+
+# GERAR EXCEL DOS DADOS ATUAIS
+@app.route("/variacoes/download")
+def download_variacoes():
+    variacoes = VariacaoProduto.query.all()
+    data = [
+        {
+            "Código Variado": v.codigo_variado,
+            "Códigos Base": v.codigos_base,
+            "Endereço": v.endereco or ""
+        }
+        for v in variacoes
+    ]
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+    return send_file(output, as_attachment=True, download_name="variacoes_export.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 @app.route('/limpar_pedidos')
 def limpar_pedidos():
@@ -391,6 +495,7 @@ def download_relatorio():
     return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
-    #print(extrair_itens_xml("35250762434436001703550020003131411225750547"))

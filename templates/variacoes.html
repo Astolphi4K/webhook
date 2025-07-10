@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Pedidos</title>
+    <title>Variações de Produto</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -67,7 +67,7 @@
             margin-bottom: 20px;
         }
 
-        select, input[type="date"], button {
+        input[type="text"], input[type="file"] {
             padding: 10px 12px;
             border-radius: 6px;
             border: 1px solid #ccc;
@@ -77,8 +77,11 @@
         button {
             background-color: #3498db;
             color: white;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
-            transition: 0.3s;
+            font-size: 16px;
         }
 
         button:hover {
@@ -120,7 +123,6 @@
             .sidebar {
                 position: static;
                 width: 100%;
-                height: auto;
                 padding: 10px;
                 display: flex;
                 justify-content: space-around;
@@ -140,7 +142,6 @@
 
             form {
                 flex-direction: column;
-                align-items: stretch;
             }
 
             table, thead, tbody, th, td, tr {
@@ -175,69 +176,56 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Menu</h2>
-        <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/relatorio">Relatório</a></li>
-            <li><a href="/pedidos">Pedidos</a></li>
-            <li><a href="/variacoes">Variações</a></li>
-        </ul>
-    </div>
+<div class="sidebar">
+    <h2>Menu</h2>
+    <ul>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/relatorio">Relatório</a></li>
+        <li><a href="/pedidos">Pedidos</a></li>
+        <li><a href="/variacoes">Variações</a></li>
+    </ul>
+</div>
 
-    <h1>Relatório de Pedidos</h1>
+<h1>Cadastro de Variações de Produto</h1>
 
-    <form method="POST" action="/relatorio">
-        <select name="marketplace">
-            <option value="">-- Marketplace --</option>
-            {% for loja in marketplaces %}
-                <option value="{{ loja }}">{{ loja }}</option>
-            {% endfor %}
-        </select>
+<form method="POST">
+    <input type="hidden" name="id" id="edit-id">
+    <input type="text" name="codigo_variado" placeholder="Código variado" required>
+    <input type="text" name="codigos_base" placeholder="Códigos base (ex: 1971,1915)" required>
+    <input type="text" name="endereco" placeholder="Endereço (opcional)">
+    <button type="submit">Salvar</button>
+</form>
 
-        <select name="status">
-            <option value="">-- Status --</option>
-            {% for status in status_list %}
-                <option value="{{ status }}">{{ status }}</option>
-            {% endfor %}
-        </select>
+<form method="POST" action="/variacoes/importar" enctype="multipart/form-data">
+    <input type="file" name="arquivo" accept=".xlsx" required>
+    <button type="submit">Importar Planilha</button>
+</form>
 
-        <input type="date" name="data_inicial">
-        <input type="date" name="data_final">
-        <button type="submit">Filtrar</button>
-    </form>
+<a href="/variacoes/download"><button>Exportar Excel</button></a>
 
-    <form method="POST" action="/download_relatorio">
-    <input type="hidden" name="marketplace" value="{{ request.form.marketplace }}">
-    <input type="hidden" name="status" value="{{ request.form.status }}">
-    <input type="hidden" name="data_inicial" value="{{ request.form.data_inicial }}">
-    <input type="hidden" name="data_final" value="{{ request.form.data_final }}">
-    <button type="submit">Download Excel</button>
-    </form>
-
-    {% if pedidos %}
-    <table>
-        <thead>
-            <tr>
-                <th>NF-e</th>
-                <th>Marketplace</th>
-                <th>SKU</th>
-                <th>Quantidade</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in pedidos %}
-            <tr>
-                <td data-label="NF-e">{{ p.nfe }}</td>
-                <td data-label="Marketplace">{{ p.marketplace }}</td>
-                <td data-label="SKU">{{ p.sku }}</td>
-                <td data-label="Quantidade">{{ p.quantidade }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p>Nenhum pedido encontrado.</p>
-    {% endif %}
+<table>
+    <thead>
+        <tr>
+            <th>Código Variado</th>
+            <th>Códigos Base</th>
+            <th>Endereço</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for v in variacoes %}
+        <tr>
+            <td data-label="Código Variado">{{ v.codigo_variado }}</td>
+            <td data-label="Códigos Base">{{ v.codigos_base }}</td>
+            <td data-label="Endereço">{{ v.endereco or '-' }}</td>
+            <td data-label="Ações">
+                <form method="POST" action="/variacoes/excluir/{{ v.id }}" onsubmit="return confirm('Deseja excluir esta variação?')">
+                    <button type="submit">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 </body>
 </html>
