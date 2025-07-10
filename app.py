@@ -338,7 +338,7 @@ def dashboard():
     return render_template('dashboard.html', total=total, cancelados=cancelados, autorizados=autorizados, bipados=bipados)
 
 
-@app.route('/download_relatorio', methods=['POST'])
+@app.route("/download_relatorio", methods=["POST"])
 def download_relatorio():
     selected_marketplace = request.form.get('marketplace')
     selected_status = request.form.get('status')
@@ -368,32 +368,27 @@ def download_relatorio():
         except ValueError:
             pass
 
-    pedidos = query.all()
+    pedidos = query.order_by(Pedido.hora.desc()).all()
 
-    # Convertendo para DataFrame
-    df = pd.DataFrame([{
-        "Data": p.hora.strftime("%d/%m/%Y %H:%M"),
-        "ID": p.id,
-        "Status": p.status,
-        "Loja": p.idloja,
-        "Chave de Acesso": p.chaveacesso,
-        "Nome": p.nome,
-        "Num. NFe": p.numnfe
-    } for p in pedidos])
+    relatorio_detalhado = []
+    for pedido in pedidos:
+        for item in pedido.itens:
+            relatorio_detalhado.append({
+                'NF-e': pedido.numnfe,
+                'Marketplace': pedido.idloja,
+                'SKU': item.codigo_produto,
+                'Quantidade': item.quantidade
+            })
 
-    # Criar Excel em memória
+    # Gera DataFrame e arquivo em memória
+    df = pd.DataFrame(relatorio_detalhado)
     output = BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Relatorio')
-
+    df.to_excel(output, index=False, engine='openpyxl')
     output.seek(0)
 
-    return send_file(
-        output,
-        download_name='relatorio_pedidos.xlsx',
-        as_attachment=True,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    # Envia o arquivo para download
+    filename = f"relatorio_pedidos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
 if __name__ == '__main__':
