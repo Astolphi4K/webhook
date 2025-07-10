@@ -2,37 +2,36 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Pedidos</title>
     <style>
        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            padding: 40px;
-            color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f6f8;
+        margin: 0;
+        padding: 40px 20px;
+        color: #333;
         }
 
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
-        form {
+        form, .input-wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 30px;
-        }
-
-        label {
-            font-weight: 600;
-            margin-right: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            gap: 10px;
         }
 
         input[type="text"] {
-            width: 400px;
+            width: 100%;
+            max-width: 400px;
             padding: 10px 14px;
             font-size: 16px;
             border: 1px solid #ccc;
@@ -54,6 +53,7 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-size: 14px;
         }
 
         th {
@@ -82,16 +82,18 @@
             color: #999;
             padding: 20px;
         }
+
+        /* Sidebar */
         .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 120px;
-        height: 100%;
-        background-color: #2c3e50;
-        padding: 20px;
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 100%;
+            background-color: #2c3e50;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            color: white;
         }
 
         .sidebar h2 {
@@ -120,10 +122,12 @@
             color: #3498db;
         }
 
-        /* Ajuste do conteúdo da página para não ficar sob o menu */
+        /* Compensar largura da sidebar */
         body {
-            margin-left: 240px;
+            margin-left: 200px;
         }
+
+        /* Status */
         .status {
             display: inline-block;
             padding: 5px 10px;
@@ -136,6 +140,66 @@
         .cancelado   { background-color: #f1c40f; color: #333; }
         .buffered    { background-color: #3498db; }
         .bipado      { background-color: #9b59b6; }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            body {
+                margin-left: 0;
+                padding: 20px 10px;
+            }
+
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                box-shadow: none;
+                padding: 10px;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+
+            .sidebar ul {
+                display: flex;
+                flex-direction: row;
+                gap: 15px;
+                margin: 0;
+            }
+
+            .sidebar h2 {
+                display: none;
+            }
+
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                margin-bottom: 15px;
+                border-bottom: 1px solid #ccc;
+                background-color: white;
+                border-radius: 8px;
+                padding: 10px;
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                flex-basis: 50%;
+            }
+        }
+
 
     </style>
 </head>

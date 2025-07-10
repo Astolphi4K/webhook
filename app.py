@@ -20,7 +20,7 @@ db = SQLAlchemy(app)
 
 def extrair_itens_xml(xml_url):
     try:
-        response = requests.get(xml_url)
+        response = requests.get("https://www.bling.com.br/relatorios/nfe.xml.php?chaveAcesso=" + xml_url)
         response.raise_for_status()
 
         # Define o namespace da NFe
@@ -153,7 +153,7 @@ def receber_webhook():
                     db.session.commit()
                     print(f"Salvo: {novo_pedido.id}")
 
-                    xml_url = nota.get('xml')
+                    xml_url = nota.get('chaveAcesso')
                     if xml_url:
                         itens_xml  = extrair_itens_xml(xml_url)
                         print(f"Itens extraídos para pedido {novo_pedido.id}: {itens_xml}")
@@ -191,7 +191,6 @@ def receber_webhook():
     except Exception as e:
         print('Erro ao processar webhook:', e)
         return jsonify({'erro': str(e)}), 500
-
 
 
 @app.route('/pedidos')
@@ -399,3 +398,4 @@ def download_relatorio():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    #print(extrair_itens_xml("35250762434436001703550020003131411225750547"))
