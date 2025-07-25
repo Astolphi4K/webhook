@@ -215,10 +215,16 @@
     </div>
     <h1>Pedidos Faturados</h1>
     <h2 id="contador-pedidos">Total: {{ total_pedidos }}</h2>
-    <div style="text-align: center; margin-bottom: 30px;">
-        <label for="chave">Chave de Acesso:</label>
-    <input type="text" id="chave" name="chave" placeholder="Insira a chave e pressione Enter" style="width: 400px;">
-</div>
+    <div class="input-wrapper">
+        <div>
+            <label for="chave">Bipar Chave de Acesso:</label><br>
+            <input type="text" id="chave" name="chave" placeholder="Bipe a chave e pressione Enter" style="width: 300px;">
+        </div>
+        <div>
+            <label for="consulta-chave">Consultar Chave de Acesso:</label><br>
+            <input type="text" id="consulta-chave" name="consulta-chave" placeholder="Digite para filtrar na tabela" style="width: 300px;">
+        </div>
+    </div>
 </div>
 
     </form>
@@ -281,7 +287,7 @@
                         document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
                         mostrarNotificacao(data.mensagem || "Sucesso!", "green");
                     } else {
-                        mostrarNotificacao(data.erro || data.mensagem || "Erro ao bipar", "red");
+                        mostrarNotificacao(data.erro + " Data: " + data.data || data.mensagem || "Erro ao bipar", "red");
                     }
 
                     document.getElementById("chave").value = "";
@@ -310,6 +316,7 @@ function atualizarTabela(pedidos) {
 
         tr.innerHTML = `
             <td>${p.hora}</td>
+            <td>${p.hora_bipado}</td>
             <td>${p.id}</td>
             <td></td>
             <td>${p.idloja}</td>
@@ -318,7 +325,7 @@ function atualizarTabela(pedidos) {
             <td>${p.numnfe}</td>
         `;
 
-        tr.children[2].appendChild(statusSpan);
+        tr.children[3].appendChild(statusSpan);
         tbody.appendChild(tr);
     });
 }
@@ -340,6 +347,62 @@ function atualizarTabela(pedidos) {
                 notificacao.style.display = "none";
             }, 3000);
         }
+    
+    function inserirColunaHoraBipado() {
+        const ths = document.querySelectorAll("table thead tr th");
+        const existe = Array.from(ths).some(th => th.textContent.trim() === "Hora Bipado");
+
+        if (!existe) {
+            const tr = document.querySelector("table thead tr");
+
+            // Cria o novo <th>
+            const novoTh = document.createElement("th");
+            novoTh.textContent = "Hora Bipado";
+
+            // Insere após "Data" (índice 0)
+            tr.insertBefore(novoTh, tr.children[1]);
+        }
+    }
+    document.getElementById("consulta-chave").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        const chave = this.value.trim();
+
+        if (!chave) return;
+
+        fetch("/consultar-chave", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ chave: chave })
+        })
+        .then(async response => {
+            inserirColunaHoraBipado();
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                mostrarNotificacao("Resposta inválida do servidor", "red");
+                return;
+            }
+
+            if (response.ok) {
+                atualizarTabela(data.pedidos);
+                document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
+                mostrarNotificacao(data.mensagem || "Consulta realizada com sucesso", "green");
+            } else {
+                mostrarNotificacao(data.erro || "Chave não encontrada", "orange");
+            }
+
+            this.value = "";
+        })
+        .catch(error => {
+            console.error("Erro:", error);
+            mostrarNotificacao("Erro ao consultar chave", "red");
+        });
+    }
+});
 </script>
 
 <div id="notificacao" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%);

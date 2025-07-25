@@ -4,7 +4,7 @@ from flask import render_template, redirect
 import json
 import psycopg2
 from datetime import datetime, timedelta
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, text, inspect
 app = Flask(__name__)
 import pandas as pd
 from flask import send_file
@@ -52,13 +52,14 @@ def extrair_itens_xml(xml_url):
 class Pedido(db.Model):
     __tablename__ = 'pedidos'
 
-    hora = db.Column(db.DateTime, nullable=False)  # Nova coluna com data/hora atual
-    id = db.Column(db.BigInteger, primary_key=True)  # ID da nota fiscal
+    hora = db.Column(db.DateTime, nullable=False)  # Data/hora da criação
+    id = db.Column(db.BigInteger, primary_key=True)
     status = db.Column(db.String(50), nullable=False)
     idloja = db.Column(db.String(50), nullable=False)
     chaveacesso = db.Column(db.String(100), nullable=False)
     nome = db.Column(db.String(100), nullable=False)
     numnfe = db.Column(db.String(50), nullable=False)
+    hora_bipado = db.Column(db.DateTime, nullable=True)
 
 class ItemPedido(db.Model):
     __tablename__ = 'itens_pedido'
@@ -322,13 +323,19 @@ def bipar_pedido():
     if not pedidos:
         return jsonify({'mensagem': 'Nenhum pedido encontrado com essa chave'}), 404
 
-    # Verifica se algum pedido já está como Bipado
-    if any(p.status == "Bipado" for p in pedidos):
-        return jsonify({'erro': 'Pedido já está com status Bipado'}), 400
+    pedido_bipado = next((p for p in pedidos if p.status == "Bipado"), None)
+
+    if pedido_bipado:
+        return jsonify({
+            'erro': 'Pedido já está com status Bipado.',
+            'data': pedido_bipado.hora_bipado.strftime('%d/%m/%Y %H:%M') if pedido_bipado.hora_bipado else None
+        }), 400
 
     # Atualiza os pedidos
     for pedido in pedidos:
         pedido.status = "Bipado"
+        pedido.hora_bipado = datetime.now()
+
 
     db.session.commit()
 
@@ -343,6 +350,7 @@ def bipar_pedido():
     pedidos_data = [{
         'id': p.id,
         'hora': p.hora.strftime('%d/%m/%Y %H:%M'),
+        "horario_bipado": p.hora_bipado.strftime("%d/%m/%Y %H:%M") if p.hora_bipado else "Pedido não bipado",
         'status': p.status,
         'idloja': p.idloja,
         'chaveacesso': p.chaveacesso,
@@ -494,8 +502,37 @@ def download_relatorio():
     filename = f"relatorio_pedidos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return send_file(output, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+@app.route("/consultar-chave", methods=["POST"])
+def consultar_chave():
+    data = request.get_json()
+    chave = data.get("chave")
 
+    if not chave:
+        return jsonify({"erro": "Chave não fornecida"}), 400
+
+    pedidos = Pedido.query.filter(Pedido.chaveacesso == chave).all()
+
+    if not pedidos:
+        return jsonify({"erro": "Nenhum pedido encontrado para essa chave"}), 404
+
+    resultado = []
+    for p in pedidos:
+        resultado.append({
+            "hora": p.hora.strftime("%d/%m/%Y %H:%M"),
+            "id": p.id,
+            "status": p.status,
+            "idloja": p.idloja,
+            "chaveacesso": p.chaveacesso,
+            "nome": p.nome,
+            "numnfe": p.numnfe,
+            "hora_bipado": p.hora_bipado.strftime("%d/%m/%Y %H:%M") if p.hora_bipado else "Pedido não bipado"
+
+        })
+
+    return jsonify({
+        "mensagem": "Pedidos encontrados",
+        "total_pedidos": len(resultado),
+        "pedidos": resultado
+    })
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+   app.run(debug=True)
