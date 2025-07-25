@@ -334,7 +334,7 @@ def bipar_pedido():
     # Atualiza os pedidos
     for pedido in pedidos:
         pedido.status = "Bipado"
-        pedido.hora_bipado = datetime.now()
+        pedido.hora_bipado = datetime.now() - timedelta(hours=3)
 
 
     db.session.commit()
