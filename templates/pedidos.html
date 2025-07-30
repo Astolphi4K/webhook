@@ -232,19 +232,23 @@
         <thead>
             <tr>
                 <th>Data</th>
+                <th>Hora Bipado</th>
                 <th>ID</th>
                 <th>Status</th>
                 <th>Loja</th>
                 <th>Chave de Acesso</th>
                 <th>Nome</th>
                 <th>Num. NFe</th>
+                <th>MarketPlaceID</th>
             </tr>
         </thead>
         <tbody>
             {% for pedido in pedidos %}
             <tr>
                 <td>{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ pedido.hora_bipado if pedido.hora_bipado else 'Pedido não bipado' }}</td>
                 <td>{{ pedido.id }}</td>
+                
                 <td>
                 <span class="status {{ pedido.status|lower }}">{{ pedido.status }}</span>
                 </td>
@@ -252,6 +256,7 @@
                 <td>{{ pedido.chaveacesso }}</td>
                 <td>{{ pedido.nome }}</td>
                 <td>{{ pedido.numnfe }}</td>
+                <td>{{ pedido.marketPlaceID }}</td>
             </tr>
             {% else %}
             <tr>
@@ -316,7 +321,7 @@ function atualizarTabela(pedidos) {
 
         tr.innerHTML = `
             <td>${p.hora}</td>
-            <td>${p.hora_bipado}</td>
+            <td>${p.hora_bipado !== undefined ? p.hora_bipado : 'Pedido não bipado'}</td>
             <td>${p.id}</td>
             <td></td>
             <td>${p.idloja}</td>

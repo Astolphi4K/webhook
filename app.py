@@ -60,6 +60,7 @@ class Pedido(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     numnfe = db.Column(db.String(50), nullable=False)
     hora_bipado = db.Column(db.DateTime, nullable=True)
+    marketPlaceID = db.Column(db.String(50), nullable=False)
 
 class ItemPedido(db.Model):
     __tablename__ = 'itens_pedido'
@@ -249,7 +250,8 @@ def receber_webhook():
                     idloja=get_nome_loja_por_id(nota.get('loja')),
                     chaveacesso=nota.get('chaveAcesso'),
                     nome=nota.get('cliente', {}).get('nome'),
-                    numnfe=nota.get('numero')
+                    numnfe=nota.get('numero'),
+                    marketPlaceID = nota.get("numeroPedidoLoja")
                 )
 
                 existente = Pedido.query.get(novo_pedido.id)
@@ -535,4 +537,29 @@ def consultar_chave():
         "pedidos": resultado
     })
 if __name__ == "__main__":
-   app.run(debug=True)
+   
+    #with app.app_context():  # Garante que você está dentro do contexto da aplicação Flask
+    #    try:
+    #        with db.engine.connect() as conn:  # Abre uma conexão com o banco
+    #            conn.execute(text(
+    #                'ALTER TABLE pedidos ADD COLUMN "marketPlaceID" VARCHAR(100)'
+    #            ))  # Executa o SQL raw para adicionar a coluna
+    #            conn.commit()  # Confirma a transação
+    #        print("Coluna 'MarketPlaceID' adicionada com sucesso.")
+    #    except Exception as e:
+    #        print("Erro ao adicionar a coluna:", e)
+    
+    #with app.app_context():
+    #    insp = inspect(db.engine)
+    #    colunas = [col['name'] for col in insp.get_columns('pedidos')]
+    #    print("Colunas da tabela 'pedidos':", colunas)
+
+    #with app.app_context():
+    #    try:
+    #        with db.engine.connect() as conn:
+    #            conn.execute(text('ALTER TABLE pedidos DROP COLUMN "MarketPlaceID"'))
+    #            conn.commit()
+    #        print("Coluna 'MarketPlaceID' removida com sucesso.")
+    #    except Exception as e:
+    #        print("Erro ao remover a coluna:", e)
+    app.run(debug=True)
