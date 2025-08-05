@@ -200,7 +200,13 @@
             }
         }
 
-
+        .icone-alerta {
+            font-size: 20px;
+            font-weight: bold;
+            display: inline-block;
+            animation: pulse 1.2s infinite; /* opcional para atenção */
+    }
+        
     </style>
 </head>
 <body>
@@ -235,11 +241,11 @@
                 <th>Hora Bipado</th>
                 <th>ID</th>
                 <th>Status</th>
-                <th>Loja</th>
                 <th>Chave de Acesso</th>
                 <th>Nome</th>
                 <th>Num. NFe</th>
                 <th>MarketPlaceID</th>
+                <th>Loja</th>
             </tr>
         </thead>
         <tbody>
@@ -247,16 +253,46 @@
             <tr>
                 <td>{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>{{ pedido.hora_bipado if pedido.hora_bipado else 'Pedido não bipado' }}</td>
-                <td>{{ pedido.id }}</td>
-                
+                <td>{{ pedido.id }}</td>  
                 <td>
                 <span class="status {{ pedido.status|lower }}">{{ pedido.status }}</span>
-                </td>
-                <td>{{ pedido.idloja }}</td>
+                
+                    {% if pedido.hora <(datetime.utcnow() - timedelta(hours=10)) and pedido.status.lower() != 'buffered' %}
+                        <span class="icone-alerta" title="Pedido com mais de 10h e não bipado!">⚠️</span>
+                    {% endif %}
+               
+            </td> 
                 <td>{{ pedido.chaveacesso }}</td>
                 <td>{{ pedido.nome }}</td>
                 <td>{{ pedido.numnfe }}</td>
                 <td>{{ pedido.marketPlaceID }}</td>
+                <td>
+                {% if pedido.idloja == "Mercado Livre" %}
+                    <img src="https://w7.pngwing.com/pngs/396/132/png-transparent-free-market-e-marketplace-brazil-market-economy-others-miscellaneous-text-service-thumbnail.png"
+                        alt="Mercado Livre" width="36" height="26">
+                {% elif pedido.idloja == "Shopee" %}
+                    <img src="https://www.clipartmax.com/png/middle/109-1098412_logo-shopee-png.png"
+                        alt="Shopee" width="30" height="32">
+                {% elif pedido.idloja == "Candide" %}
+                    <img src="https://d3p2amk7tvag7f.cloudfront.net/brands/d3a98b4202591542ff4eab6fe3001e2df4452070.png"
+                        alt="Candide" width="65" height="20">
+                {% elif pedido.idloja == "Funko" %}
+                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Funko.svg/1200px-Funko.svg.png"
+                        alt="Funko" width="70" height="25">
+                {% elif pedido.idloja == "Magazine Luiza" %}
+                    <img src="https://logodownload.org/wp-content/uploads/2014/06/magalu-logo.png"
+                        alt="Magalu" width="63" height="15">
+                {% elif pedido.idloja == "Privalia" %}
+                    <img src="https://www.imcbrasil.com/wp-content/uploads/2021/06/privalia.png"
+                        alt="Privalia" width="60" height="15">
+                {% elif pedido.idloja == "Shein" %}
+                    <img src="https://img.icons8.com/?size=512&id=V3r2kWDPwZgQ&format=png"
+                        alt="Shein" width="35" height="33">
+                {% else %}
+                    {{ pedido.idloja }}
+                {% endif %}
+               
+                </td>
             </tr>
             {% else %}
             <tr>
@@ -266,81 +302,53 @@
         </tbody>
     </table>
     <script>
-       document.getElementById("chave").addEventListener("keydown", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                const chave = this.value;
+        document.getElementById("chave").addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        const chave = this.value;
 
-                fetch("/bipar", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ chave: chave })
-                })
-                .then(async response => {
-                    let data;
-                    try {
-                        data = await response.json();
-                    } catch (e) {
-                        mostrarNotificacao("Resposta inválida do servidor (não é JSON)", "red");
-                        return;
-                    }
+        fetch("/bipar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ chave: chave })
+        })
+        .then(async response => {
+    try {
+        const rawText = await response.text();
 
-                    if (response.ok) {
-                        atualizarTabela(data.pedidos);
-                        document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
-                        mostrarNotificacao(data.mensagem || "Sucesso!", "green");
-                    } else {
-                        mostrarNotificacao(data.erro + " Data: " + data.data || data.mensagem || "Erro ao bipar", "red");
-                    }
+        const data = JSON.parse(rawText);
+      
 
-                    document.getElementById("chave").value = "";
-                })
-                .catch(error => {
-                    console.error("Erro:", error);
-                    mostrarNotificacao("Erro ao conectar com o servidor ou resposta inválida", "red");
-                });
-            }
+        if (response.ok) {
+            atualizarTabelaHTML(data.html);
+            document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
+            mostrarNotificacao(data.mensagem || "Sucesso!", "green");
+        } else {
+            mostrarNotificacao(
+                data.erro + " Data: " + data.data || data.mensagem || "Erro ao bipar",
+                "red"
+            );
+        }
+
+        document.getElementById("chave").value = "";
+
+    } catch (e) {
+        mostrarNotificacao("Resposta inválida do servidor (não é JSON)", "red");
+    }
+})
+        .catch(error => {
+            console.error("Erro:", error);
+            mostrarNotificacao("Erro ao conectar com o servidor ou resposta inválida", "red");
         });
+    }
+});
 
-function atualizarTabela(pedidos) {
+function atualizarTabelaHTML(html) {
     const tbody = document.querySelector("#tabela-pedidos tbody");
-    tbody.innerHTML = ""; // Limpa a tabela
-
-    pedidos.forEach(p => {
-        const tr = document.createElement("tr");
-
-        const statusSpan = document.createElement("span");
-        statusSpan.classList.add("status");
-
-        // Normaliza para minúsculo
-        const statusFormatado = p.status.toLowerCase();
-        statusSpan.classList.add(statusFormatado);
-        statusSpan.textContent = p.status;
-
-        tr.innerHTML = `
-            <td>${p.hora}</td>
-            <td>${p.hora_bipado !== undefined ? p.hora_bipado : 'Pedido não bipado'}</td>
-            <td>${p.id}</td>
-            <td></td>
-            <td>${p.idloja}</td>
-            <td>${p.chaveacesso}</td>
-            <td>${p.nome}</td>
-            <td>${p.numnfe}</td>
-        `;
-
-        tr.children[3].appendChild(statusSpan);
-        tbody.appendChild(tr);
-    });
+    tbody.innerHTML = html;
 }
-
-
-
-
- //setInterval(function () {
- //       location.reload();
- //  }, 180000); // Atualizar a página a cada 3 minutos
 
     function mostrarNotificacao(mensagem, cor) {
             const notificacao = document.getElementById("notificacao");

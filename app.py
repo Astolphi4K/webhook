@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
+
 from flask import render_template, redirect
 import json
 import psycopg2
@@ -309,8 +310,14 @@ def listar_pedidos():
     )
 ).order_by(asc(Pedido.status)).all()
     total_pedidos = len(pedidos)
-    return render_template('pedidos.html', pedidos=pedidos, total_pedidos=total_pedidos)
-  
+    return render_template(
+        'pedidos.html',
+        pedidos=pedidos,
+        total_pedidos=total_pedidos,
+        datetime=datetime,
+        timedelta=timedelta
+    )
+    
 
 @app.route('/bipar', methods=['POST'])
 def bipar_pedido():
@@ -333,34 +340,35 @@ def bipar_pedido():
             'data': pedido_bipado.hora_bipado.strftime('%d/%m/%Y %H:%M') if pedido_bipado.hora_bipado else None
         }), 400
 
-    # Atualiza os pedidos
     for pedido in pedidos:
         pedido.status = "Bipado"
         pedido.hora_bipado = datetime.now() - timedelta(hours=3)
 
-
     db.session.commit()
 
-    # Atualiza a tabela com pedidos autorizados
     pedidos_atualizados = Pedido.query.filter(
-    or_(
-        Pedido.status == "Autorizada",
-        Pedido.status == "Buffered"
-    )
+        or_(
+            Pedido.status == "Autorizada",
+            Pedido.status == "Buffered"
+        )
     ).order_by(asc(Pedido.status)).all()
+    
     total_pedidos = len(pedidos_atualizados)
-    pedidos_data = [{
-        'id': p.id,
-        'hora': p.hora.strftime('%d/%m/%Y %H:%M'),
-        "horario_bipado": p.hora_bipado.strftime("%d/%m/%Y %H:%M") if p.hora_bipado else "Pedido não bipado",
-        'status': p.status,
-        'idloja': p.idloja,
-        'chaveacesso': p.chaveacesso,
-        'nome': p.nome,
-        'numnfe': p.numnfe
-    } for p in pedidos_atualizados]
 
-    return jsonify({'mensagem': 'Pedido(s) bipado(s) com sucesso', 'pedidos': pedidos_data, 'total_pedidos': total_pedidos}), 200
+    # ⬇️ renderiza os <tr> com Jinja
+    html_pedidos = render_template('linhas_pedido.html', pedidos=pedidos_atualizados, datetime=datetime, timedelta=timedelta)
+
+    response = {
+        'html': html_pedidos,
+        'mensagem': 'Pedido bipado com sucesso',
+        'total_pedidos': total_pedidos
+    }
+
+    return Response(
+        json.dumps(response, ensure_ascii=False),
+        mimetype='application/json',
+        status=200
+    )
 
 
 @app.route('/relatorio', methods=['GET', 'POST'])

@@ -1,0 +1,36 @@
+{% for pedido in pedidos %}
+<tr>
+    <td>{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
+    <td>{{ pedido.hora_bipado.strftime('%d/%m/%Y %H:%M') if pedido.hora_bipado else 'Pedido não bipado' }}</td>
+    <td>{{ pedido.id }}</td>
+    <td>
+        <span class="status {{ pedido.status|lower }}">{{ pedido.status }}</span>
+        {% if pedido.hora < (datetime.utcnow() - timedelta(hours=10)) and pedido.status.lower() != 'buffered' %}
+            <span class="icone-alerta" title="Pedido com mais de 10h e não bipado!">⚠️</span>
+        {% endif %}
+    </td>
+    <td>{{ pedido.chaveacesso }}</td>
+    <td>{{ pedido.nome }}</td>
+    <td>{{ pedido.numnfe }}</td>
+    <td>{{ pedido.marketPlaceID }}</td>
+    <td style="display: flex; align-items: center; gap: 6px;">
+        {% if pedido.idloja == "Mercado Livre" %}
+            <img src="https://w7.pngwing.com/pngs/396/132/png-transparent-free-market-e-marketplace-brazil-market-economy-others-miscellaneous-text-service-thumbnail.png" alt="Mercado Livre" width="36" height="26">
+        {% elif pedido.idloja == "Shopee" %}
+            <img src="https://www.clipartmax.com/png/middle/109-1098412_logo-shopee-png.png" alt="Shopee" width="30" height="32">
+        {% elif pedido.idloja == "Candide" %}
+            <img src="https://d3p2amk7tvag7f.cloudfront.net/brands/d3a98b4202591542ff4eab6fe3001e2df4452070.png" alt="Candide" width="65" height="20">
+        {% elif pedido.idloja == "Funko" %}
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Funko.svg/1200px-Funko.svg.png" alt="Funko" width="70" height="25">
+        {% elif pedido.idloja == "Magazine Luiza" %}
+            <img src="https://logodownload.org/wp-content/uploads/2014/06/magalu-logo.png" alt="Magalu" width="63" height="15">
+        {% elif pedido.idloja == "Privalia" %}
+            <img src="https://www.imcbrasil.com/wp-content/uploads/2021/06/privalia.png" alt="Privalia" width="60" height="15">
+        {% elif pedido.idloja == "Shein" %}
+            <img src="https://img.icons8.com/?size=512&id=V3r2kWDPwZgQ&format=png" alt="Shein" width="35" height="33">
+        {% else %}
+            {{ pedido.idloja }}
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
