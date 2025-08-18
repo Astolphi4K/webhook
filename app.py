@@ -1,14 +1,18 @@
 from flask import Flask, request, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 
-from flask import render_template, redirect
+from flask import render_template, redirect, flash, abort, send_file
 import json
 import psycopg2
 from datetime import datetime, timedelta
 from sqlalchemy import desc, asc, text, inspect
+import unicodedata  # adicionar na requeriments
+
+import os # adicionar na requeriments
 app = Flask(__name__)
+from sqlalchemy.exc import SQLAlchemyError
+app.secret_key = os.urandom(24)
 import pandas as pd
-from flask import send_file
 from sqlalchemy import or_
 from io import BytesIO
 import requests
@@ -79,38 +83,66 @@ class VariacaoProduto(db.Model):
     codigo_variado = db.Column(db.String, unique=True, nullable=False)  # ex: 3599A, 1915K71
     codigos_base = db.Column(db.String, nullable=False)  # ex: 3599, ou "1971,1915"
     endereco = db.Column(db.String, nullable=True)  # opcional: ex: "A01-B01"
+    url_image = db.Column(db.String, nullable=True)       # Link para a imagem do produto
+    descricao = db.Column(db.String, nullable=True)       # Descrição do produto
+    quantidade = db.Column(db.Integer, nullable=True)     # Quantidade em estoque
 
-# ROTA PRINCIPAL
+
 @app.route("/variacoes", methods=["GET", "POST"])
 def gerenciar_variacoes():
     if request.method == "POST":
         id_edit = request.form.get("id")
+
         codigo_variado = request.form["codigo_variado"].strip().upper()
         codigos_base = request.form["codigos_base"].strip()
-        endereco = request.form.get("endereco", "").strip()
+        endereco = request.form.get("endereco", "").strip() or None
 
-        if id_edit:
-            variacao = VariacaoProduto.query.get(id_edit)
-            if variacao:
+        # Novos campos
+        url_image = request.form.get("url_image", "").strip() or None
+        descricao = request.form.get("descricao", "").strip() or None
+
+        # quantidade: converte para int se vier algo válido, senão None
+        qtd_raw = (request.form.get("quantidade") or "").strip()
+        try:
+            quantidade = int(qtd_raw) if qtd_raw != "" else None
+        except ValueError:
+            quantidade = None  # ou você pode retornar 400 se preferir validar estritamente
+
+        try:
+            if id_edit:
+                variacao = VariacaoProduto.query.get(id_edit)
+                if not variacao:
+                    abort(404, description="Variação não encontrada")
+
                 variacao.codigo_variado = codigo_variado
                 variacao.codigos_base = codigos_base
                 variacao.endereco = endereco
-        else:
-            nova = VariacaoProduto(
-                codigo_variado=codigo_variado,
-                codigos_base=codigos_base,
-                endereco=endereco
-            )
-            db.session.add(nova)
+                variacao.url_image = url_image
+                variacao.descricao = descricao
+                variacao.quantidade = quantidade
+            else:
+                nova = VariacaoProduto(
+                    codigo_variado=codigo_variado,
+                    codigos_base=codigos_base,
+                    endereco=endereco,
+                    url_image=url_image,
+                    descricao=descricao,
+                    quantidade=quantidade,
+                )
+                db.session.add(nova)
 
-        db.session.commit()
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            # Se quiser, retorne uma página/flash com a mensagem
+            abort(400, description=f"Erro ao salvar variação: {e}")
+
         return redirect("/variacoes")
 
+    # GET
     variacoes = VariacaoProduto.query.order_by(VariacaoProduto.codigo_variado).all()
     return render_template("variacoes.html", variacoes=variacoes)
 
-
-# EXCLUIR
 @app.route("/variacoes/excluir/<int:id>", methods=["POST"])
 def excluir_variacao(id):
     variacao = db.session.get(VariacaoProduto, id)
@@ -125,57 +157,174 @@ def excluir_variacao(id):
         return f"Erro ao excluir: {str(e)}", 500
 
 
+@app.route("/variacoes/excluir_em_massa", methods=["POST"])
+def excluir_variacoes_em_massa():
+    # aceita tanto form quanto JSON
+    ids = request.form.getlist("ids[]")
+    if not ids and request.is_json:
+        ids = request.json.get("ids", [])
+
+    if not ids:
+        # Nada selecionado: só volta pra lista
+        return redirect("/variacoes")
+
+    try:
+        ids = [int(i) for i in ids]
+    except ValueError:
+        return "IDs inválidos", 400
+
+    try:
+        # Exclusão em massa (uma transação só)
+        db.session.query(VariacaoProduto).filter(VariacaoProduto.id.in_(ids)).delete(synchronize_session=False)
+        db.session.commit()
+        return redirect("/variacoes")
+    except Exception as e:
+        db.session.rollback()
+        return f"Erro ao excluir em massa: {e}", 500
+
+
 # IMPORTAR PLANILHA
+def _norm(s: str) -> str:
+    if s is None or (isinstance(s, float) and pd.isna(s)):
+        return ""
+    return str(s).strip()
+
+def _norm_cols(cols):
+    # Remove acentos, sobe para maiúsculas e tira espaços extras
+    return [
+        unicodedata.normalize("NFKD", c).encode("ASCII", "ignore").decode("utf-8").upper().strip()
+        for c in cols
+    ]
+
 @app.route("/variacoes/importar", methods=["POST"])
 def importar_planilha():
     file = request.files.get("arquivo")
-    if file:
+    if not file or not file.filename:
+        flash("Nenhum arquivo enviado.", "error")
+        return redirect("/variacoes")
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in [".xlsx", ".xls"]:
+        flash("Formato inválido. Envie um arquivo Excel (.xlsx ou .xls).", "error")
+        return redirect("/variacoes")
+
+    try:
         df = pd.read_excel(file)
+    except Exception as e:
+        flash(f"Erro ao ler o arquivo: {e}", "error")
+        return redirect("/variacoes")
 
-        for _, row in df.iterrows():
-            codigo = str(row.get("CÓDIGO", "")).strip()
-            endereco = str(row.get("ENDEREÇO", "")).strip() if "ENDEREÇO" in df.columns else None
+    # Normaliza cabeçalhos
+    df.columns = _norm_cols(df.columns)
 
-            # Coletar os SKUs base, ignorando colunas 'CÓDIGO' e 'ENDEREÇO'
-            bases = [
-                str(row[col]).strip()
-                for col in df.columns
-                if col not in ["CÓDIGO", "ENDEREÇO"] and pd.notna(row[col])
-            ]
+    # Colunas obrigatórias (em maiúsculo pois _norm_cols normalmente padroniza assim)
+    required = {"CODIGO VARIADO", "CODIGOS BASE"}
+    if not required.issubset(set(df.columns)):
+        faltando = required - set(df.columns)
+        flash(f"Colunas obrigatórias ausentes: {', '.join(faltando)}.", "error")
+        return redirect("/variacoes")
 
-            if codigo and bases:
-                existente = VariacaoProduto.query.filter_by(codigo_variado=codigo).first()
-                if existente:
-                    existente.codigos_base = ",".join(bases)
-                    existente.endereco = endereco
-                else:
-                    nova = VariacaoProduto(
-                        codigo_variado=codigo,
-                        codigos_base=",".join(bases),
-                        endereco=endereco
-                    )
-                    db.session.add(nova)
-        db.session.commit()
+    # Renomeia para nomes internos (os que o modelo/handler usam)
+    rename_map = {}
+    for col in df.columns:
+        if col == "CODIGO VARIADO": rename_map[col] = "codigo_variado"
+        elif col == "CODIGOS BASE": rename_map[col] = "codigos_base"
+        elif col == "ENDERECO": rename_map[col] = "endereco"
+        elif col in ("URL IMAGE", "URL IMAGEM", "URL_IMAGE", "URL"): rename_map[col] = "url_image"
+        elif col in ("DESCRICAO", "DESCRIÇÃO"): rename_map[col] = "descricao"
+        elif col in ("QUANTIDADE", "QTD"): rename_map[col] = "quantidade"
+
+    df = df.rename(columns=rename_map)
+
+    # Carrega existentes em memória para evitar query por linha
+    existentes = {v.codigo_variado: v for v in VariacaoProduto.query.all()}
+
+    inseridos = 0
+    atualizados = 0
+    ignorados = 0
+
+    for _, row in df.iterrows():
+        codigo = _norm(row.get("codigo_variado", ""))
+        codigos_base = _norm(row.get("codigos_base", ""))
+        endereco = _norm(row.get("endereco", "")) if "endereco" in df.columns else None
+        url_image = (row.get("url_image") or None)
+        if isinstance(url_image, str):
+            url_image = url_image.strip() or None
+
+        descricao = (row.get("descricao") or None)
+        if isinstance(descricao, str):
+            descricao = descricao.strip() or None
+
+        quantidade = None
+        if "quantidade" in df.columns:
+            raw = row.get("quantidade")
+            # tenta converter para inteiro com segurança
+            try:
+                if pd.notna(raw) and str(raw).strip() != "":
+                    quantidade = int(float(raw))
+            except (ValueError, TypeError):
+                quantidade = None  # ignora valor inválido
+
+        if not codigo or not codigos_base:
+            ignorados += 1
+            continue
+
+        if codigo in existentes:
+            v = existentes[codigo]
+            v.codigos_base = codigos_base
+            v.endereco = endereco or None
+            v.url_image = url_image
+            v.descricao = descricao
+            v.quantidade = quantidade
+            atualizados += 1
+        else:
+            novo = VariacaoProduto(
+                codigo_variado=codigo,
+                codigos_base=codigos_base,
+                endereco=endereco or None,
+                url_image=url_image,
+                descricao=descricao,
+                quantidade=quantidade,
+            )
+            db.session.add(novo)
+            inseridos += 1
+
+    db.session.commit()
+    flash(
+        f"Importação concluída! Inseridos: {inseridos}, Atualizados: {atualizados}"
+        + (f", Ignorados (faltando dados): {ignorados}" if ignorados else ""),
+        "success"
+    )
     return redirect("/variacoes")
 
 
 # GERAR EXCEL DOS DADOS ATUAIS
 @app.route("/variacoes/download")
 def download_variacoes():
-    variacoes = VariacaoProduto.query.all()
+    variacoes = VariacaoProduto.query.order_by(VariacaoProduto.codigo_variado).all()
     data = [
         {
             "Código Variado": v.codigo_variado,
             "Códigos Base": v.codigos_base,
-            "Endereço": v.endereco or ""
+            "Endereço": v.endereco or "",
+            "URL Imagem": v.url_image or "",
+            "Descrição": v.descricao or "",
+            "Quantidade": v.quantidade if v.quantidade is not None else "",
         }
         for v in variacoes
     ]
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data, columns=[
+        "Código Variado", "Códigos Base", "Endereço", "URL Imagem", "Descrição", "Quantidade"
+    ])
     output = BytesIO()
     df.to_excel(output, index=False)
     output.seek(0)
-    return send_file(output, as_attachment=True, download_name="variacoes_export.xlsx", mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="variacoes_export.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 @app.route('/limpar_pedidos')
 def limpar_pedidos():
@@ -545,29 +694,14 @@ def consultar_chave():
         "pedidos": resultado
     })
 if __name__ == "__main__":
-   
-    #with app.app_context():  # Garante que você está dentro do contexto da aplicação Flask
-    #    try:
-    #        with db.engine.connect() as conn:  # Abre uma conexão com o banco
-    #            conn.execute(text(
-    #                'ALTER TABLE pedidos ADD COLUMN "marketPlaceID" VARCHAR(100)'
-    #            ))  # Executa o SQL raw para adicionar a coluna
-    #            conn.commit()  # Confirma a transação
-    #        print("Coluna 'MarketPlaceID' adicionada com sucesso.")
-    #    except Exception as e:
-    #        print("Erro ao adicionar a coluna:", e)
-    
-    #with app.app_context():
-    #    insp = inspect(db.engine)
-    #    colunas = [col['name'] for col in insp.get_columns('pedidos')]
-    #    print("Colunas da tabela 'pedidos':", colunas)
-
     #with app.app_context():
     #    try:
     #        with db.engine.connect() as conn:
-    #            conn.execute(text('ALTER TABLE pedidos DROP COLUMN "MarketPlaceID"'))
+    #            conn.execute(text('ALTER TABLE variacoes_produto ADD COLUMN url_image VARCHAR'))
+    #            conn.execute(text('ALTER TABLE variacoes_produto ADD COLUMN descricao VARCHAR'))
+    #            conn.execute(text('ALTER TABLE variacoes_produto ADD COLUMN quantidade INTEGER'))
     #            conn.commit()
-    #        print("Coluna 'MarketPlaceID' removida com sucesso.")
+    #        print("Colunas adicionadas com sucesso.")
     #    except Exception as e:
-    #        print("Erro ao remover a coluna:", e)
+    #        print("Erro ao adicionar colunas:", e)
     app.run(debug=True)

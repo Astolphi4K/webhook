@@ -1,231 +1,524 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Variações de Produto</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            padding: 40px 20px;
-            color: #333;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Variações de Produto</title>
 
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100px;
-            height: 100%;
-            background-color: #2c3e50;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            color: white;
-        }
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary-600:#1d4ed8;
+      --danger:#ef4444;
+      --danger-600:#dc2626;
+      --border:#e5e7eb;
+      --row-alt:#fafbfc;
+      --success:#16a34a;
+      --warning:#d97706;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(0,0,0,.06);
+    }
 
-        .sidebar h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: #ecf0f1;
-        }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
 
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
+    /* Sidebar */
+    .sidebar{
+      position:fixed; inset:0 auto 0 0; width:220px; background:#0f172a; color:#e5e7eb;
+      padding:24px 16px; box-shadow:2px 0 12px rgba(0,0,0,.15);
+    }
+    .brand{font-weight:700; letter-spacing:.4px; margin-bottom:18px}
+    .nav{list-style:none; padding:0; margin:0}
+    .nav a{
+      display:block; padding:10px 12px; border-radius:8px; color:#e5e7eb; text-decoration:none;
+    }
+    .nav a:hover{background:rgba(255,255,255,.08)}
 
-        .sidebar ul li {
-            margin-bottom: 15px;
-        }
+    /* Main wrapper */
+    .main{
+      margin-left:220px; padding:28px;
+    }
 
-        .sidebar ul li a {
-            color: #ecf0f1;
-            text-decoration: none;
-            font-size: 16px;
-            transition: 0.2s;
-        }
+    /* Page header */
+    .page-head{
+      display:flex; gap:16px; align-items:center; justify-content:space-between; margin-bottom:18px;
+    }
+    .page-head h1{font-size:22px; margin:0}
 
-        .sidebar ul li a:hover {
-            color: #3498db;
-        }
+    /* Toolbar (search + actions) */
+    .toolbar{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:18px;
+    }
+    .search{
+      position:relative; flex:1 1 360px; min-width:260px;
+    }
+    .search input{
+      width:100%; padding:12px 40px 12px 40px; border:1px solid var(--border); border-radius:10px;
+      background:var(--card); outline:none; font-size:14px; color:var(--text); transition:.15s;
+      box-shadow: var(--shadow);
+    }
+    .search input:focus{border-color:var(--primary)}
+    .search .icon{
+      position:absolute; left:12px; top:50%; translate:0 -50%; width:18px; height:18px; opacity:.55;
+    }
+    .search .clear{
+      position:absolute; right:8px; top:50%; translate:0 -50%;
+      background:transparent; border:0; cursor:pointer; font-size:16px; color:var(--muted);
+    }
 
-        body {
-            margin-left: 200px;
-        }
+    /* Cards / forms row */
+    .cards{
+      display:grid; grid-template-columns: 1fr auto auto; gap:12px; margin-bottom:16px;
+      align-items:start;
+    }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .card h3{margin:0 0 10px 0; font-size:15px}
 
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
+    .form-row{display:flex; gap:10px; flex-wrap:wrap}
+    .input, .file, textarea{
+      padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:#fff;
+      width:100%;
+    }
+    .btn{
+      appearance:none; border:1px solid transparent; background:var(--primary); color:#fff;
+      padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; transition:.15s;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover{background:var(--primary-600)}
+    .btn.secondary{background:#111827; border-color:#111827}
+    .btn.secondary:hover{filter:brightness(1.05)}
+    .btn.ghost{background:#fff; color:var(--text); border-color:var(--border)}
+    .btn.ghost:hover{border-color:#cbd5e1}
+    .btn.danger{background:var(--danger)}
+    .btn.danger:hover{background:var(--danger-600)}
+    .btn.link{background:transparent; border-color:transparent; color:var(--primary); padding:8px}
+    .btn.small{padding:8px 10px; font-size:13px; border-radius:8px}
 
-        form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+    /* Table */
+    .table-wrap{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow: var(--shadow); overflow:hidden;
+    }
+    table{width:100%; border-collapse:separate; border-spacing:0}
+    thead th{
+      position:sticky; top:0; z-index:1;
+      background:#0f172a; color:#e5e7eb; text-align:left; font-weight:600; letter-spacing:.3px;
+      padding:12px 14px; font-size:13px;
+    }
+    tbody td{padding:12px 14px; border-top:1px solid var(--border); font-size:14px}
+    tbody tr:nth-child(even){background:var(--row-alt)}
+    tbody tr:hover{background:#eef2ff}
+    .actions{display:flex; gap:8px}
 
-        input[type="text"], input[type="file"] {
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-        }
+    /* Selection highlight */
+    tbody tr.selected{outline:2px solid #93c5fd; background:#eff6ff}
 
-        button {
-            background-color: #3498db;
-            color: white;
-            padding: 10px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+    /* Footer actions */
+    .table-actions{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; border-top:1px solid var(--border);
+      background:#fbfbfd;
+    }
+    .muted{color:var(--muted); font-size:13px}
 
-        button:hover {
-            background-color: #2980b9;
-        }
+    /* Modal */
+    .modal-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; align-items:center; justify-content:center; padding:16px; z-index:1000;
+    }
+    .modal-overlay.open{display:flex}
+    .modal{
+      width:100%; max-width:720px; background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      overflow:hidden; border:1px solid var(--border);
+      animation: pop .15s ease-out;
+    }
+    @keyframes pop { from{transform:scale(.98); opacity:.8} to{transform:scale(1); opacity:1} }
+    .modal-header{
+      padding:14px 16px; background:#0f172a; color:#e5e7eb; display:flex; align-items:center; justify-content:space-between;
+    }
+    .modal-body{padding:16px}
+    .modal-footer{padding:12px 16px; background:#fbfbfd; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border)}
+    .modal-title{margin:0; font-size:16px}
+    .close-x{
+      background:transparent; border:0; color:#e5e7eb; font-size:22px; cursor:pointer; line-height:1;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border-radius: 8px;
-            overflow: hidden;
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #3498db;
-            color: white;
-            padding: 12px 16px;
-            text-align: left;
-        }
-
-        td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #eee;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                margin-left: 0;
-                padding: 20px 10px;
-            }
-
-            .sidebar {
-                position: static;
-                width: 100%;
-                padding: 10px;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-            }
-
-            .sidebar h2 {
-                display: none;
-            }
-
-            .sidebar ul {
-                display: flex;
-                flex-direction: row;
-                gap: 15px;
-                margin: 0;
-            }
-
-            form {
-                flex-direction: column;
-            }
-
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-
-            thead {
-                display: none;
-            }
-
-            tr {
-                margin-bottom: 15px;
-                border-bottom: 1px solid #ccc;
-                background-color: white;
-                border-radius: 8px;
-                padding: 10px;
-            }
-
-            td {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 10px;
-                font-size: 14px;
-            }
-
-            td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                flex-basis: 50%;
-            }
-        }
-    </style>
+    /* Responsive */
+    @media (max-width: 980px){
+      .main{margin-left:0; padding:16px}
+      .sidebar{position:static; width:auto; border-radius:0; box-shadow:none}
+      .cards{grid-template-columns:1fr}
+      .toolbar{gap:8px}
+      .search{flex:1 1 100%}
+      .actions{flex-wrap:wrap}
+      thead{display:none}
+      table, tbody, tr, td{display:block; width:100%}
+      tbody tr{border-top:1px solid var(--border)}
+      tbody td{display:flex; justify-content:space-between; gap:10px}
+      tbody td::before{content:attr(data-label); font-weight:600; color:var(--muted)}
+      .table-actions{flex-direction:column; align-items:stretch}
+    }
+  </style>
 </head>
 <body>
-<div class="sidebar">
-    <h2>Menu</h2>
-    <ul>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/relatorio">Relatório</a></li>
-        <li><a href="/pedidos">Pedidos</a></li>
-        <li><a href="/variacoes">Variações</a></li>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">Menu</div>
+    <ul class="nav">
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/relatorio">Relatório</a></li>
+      <li><a href="/pedidos">Pedidos</a></li>
+      <li><a href="/variacoes">Variações</a></li>
     </ul>
-</div>
+  </aside>
 
-<h1>Cadastro de Variações de Produto</h1>
+  <main class="main">
+    <div class="page-head">
+      <h1>Cadastro de Variações de Produto</h1>
+    </div>
 
-<form method="POST">
-    <input type="hidden" name="id" id="edit-id">
-    <input type="text" name="codigo_variado" placeholder="Código variado" required>
-    <input type="text" name="codigos_base" placeholder="Códigos base (ex: 1971,1915)" required>
-    <input type="text" name="endereco" placeholder="Endereço (opcional)">
-    <button type="submit">Salvar</button>
-</form>
+    <!-- Toolbar: Busca + ações rápidas -->
+    <div class="toolbar">
+      <div class="search">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <input id="search" type="text" placeholder="Pesquisar por código variado ou códigos base… (ex: 1971 ou 1915)">
+        <button class="clear" type="button" id="clearSearch" title="Limpar">×</button>
+      </div>
 
-<form method="POST" action="/variacoes/importar" enctype="multipart/form-data">
-    <input type="file" name="arquivo" accept=".xlsx" required>
-    <button type="submit">Importar Planilha</button>
-</form>
+      <a class="btn ghost" href="/variacoes/download">Exportar Excel</a>
+    </div>
 
-<a href="/variacoes/download"><button>Exportar Excel</button></a>
+    <!-- Cards / Formulários -->
+    <section class="cards">
+      <!-- Card virou apenas botão "Novo" -->
+      <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <h3 style="margin:0;">Novo / Editar Variação</h3>
+        <button class="btn" type="button" id="btnNovo">Novo</button>
+      </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Código Variado</th>
-            <th>Códigos Base</th>
-            <th>Endereço</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for v in variacoes %}
-        <tr>
-            <td data-label="Código Variado">{{ v.codigo_variado }}</td>
-            <td data-label="Códigos Base">{{ v.codigos_base }}</td>
-            <td data-label="Endereço">{{ v.endereco or '-' }}</td>
-            <td data-label="Ações">
-                <form method="POST" action="/variacoes/excluir/{{ v.id }}" onsubmit="return confirm('Deseja excluir esta variação?')">
-                    <button type="submit">Excluir</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+      <div class="card">
+        <h3>Importar Planilha</h3>
+        <form method="POST" action="/variacoes/importar" enctype="multipart/form-data" class="form-row">
+          <input class="file" type="file" name="arquivo" accept=".xlsx" required>
+          <button class="btn" type="submit">Importar</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Ações</h3>
+        <div class="form-row">
+          <button class="btn secondary small" type="button" id="deleteSelectedTop">Excluir Selecionados</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabela -->
+    <form id="form-massa" method="POST" action="/variacoes/excluir_em_massa"
+          onsubmit="return confirm('Deseja excluir as variações selecionadas?')">
+      <div class="table-wrap">
+        <table id="tabela">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="select-all"></th>
+              <th>Imagem</th>
+              <th>Código Variado</th>
+              <th>Códigos Base</th>
+              <th>Endereço</th>
+              <th>Descrição</th>
+              <th>Quantidade</th>
+              <th style="width:160px">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in variacoes %}
+            <tr>
+              <td data-label="Selecionar">
+                <input type="checkbox" name="ids[]" value="{{ v.id }}" class="row-check">
+              </td>
+
+              <!-- Coluna imagem -->
+              <td data-label="Imagem">
+                {% if v.url_image %}
+                  <img src="{{ v.url_image }}" alt="{{ v.codigo_variado }}" style="max-width:50px; max-height:50px; border-radius:4px; object-fit:cover;">
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <td data-label="Código Variado" class="col-variado">{{ v.codigo_variado }}</td>
+              <td data-label="Códigos Base" class="col-base">{{ v.codigos_base }}</td>
+              <td data-label="Endereço">{{ v.endereco or '-' }}</td>
+
+              <!-- Coluna descrição -->
+              <td data-label="Descrição">
+                {% if v.descricao %}
+                  {{ v.descricao }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+
+              <!-- Coluna quantidade -->
+              <td data-label="Quantidade">
+                {{ v.quantidade if v.quantidade is not none else '-' }}
+              </td>
+
+              <td data-label="Ações">
+                <div class="actions">
+                  <button type="button" class="btn small danger btn-excluir" data-id="{{ v.id }}">Excluir</button>
+                  <!-- Exemplo botão editar -->
+                  <!-- <button type="button" class="btn small ghost" onclick="openEditar({ ... })">Editar</button> -->
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+
+        <div class="table-actions">
+          <div class="muted" id="resultInfo">Exibindo {{ variacoes|length }} registros</div>
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
+    <div class="modal" role="document">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Nova Variação</h3>
+        <button class="close-x" type="button" id="modalClose" aria-label="Fechar">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- O form continua POSTando para a mesma rota da página (como estava) -->
+        <form method="POST" class="form-row" id="form-cadastro">
+          <input type="hidden" name="id" id="edit-id">
+
+          <div style="flex:1 1 280px; min-width:260px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Código variado</label>
+            <input class="input" type="text" name="codigo_variado" placeholder="Ex: 3599A, 1915K71" required>
+          </div>
+
+          <div style="flex:1 1 280px; min-width:260px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Códigos base</label>
+            <input class="input" type="text" name="codigos_base" placeholder="Ex: 1971,1915" required>
+          </div>
+
+          <div style="flex:1 1 280px; min-width:260px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Endereço (opcional)</label>
+            <input class="input" type="text" name="endereco" placeholder="Ex: A01-B01">
+          </div>
+
+          <div style="flex:1 1 100%; min-width:260px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">URL da imagem</label>
+            <input class="input" type="url" name="url_image" placeholder="https://...">
+          </div>
+
+          <div style="flex:1 1 100%; min-width:260px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Descrição do produto</label>
+            <textarea class="input" name="descricao" rows="3" placeholder="Breve descrição..."></textarea>
+          </div>
+
+          <div style="flex:1 1 180px; min-width:160px;">
+            <label style="display:block; font-weight:600; margin-bottom:6px;">Quantidade</label>
+            <input class="input" type="number" name="quantidade" min="0" step="1" placeholder="0">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn ghost" type="button" id="modalCancel">Cancelar</button>
+        <button class="btn" type="button" id="modalSave">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Selecionar todos
+    const selectAll = document.getElementById('select-all');
+    if (selectAll) {
+      selectAll.addEventListener('click', function(){
+        document.querySelectorAll('.row-check').forEach(cb => {
+          cb.checked = this.checked;
+          cb.closest('tr').classList.toggle('selected', cb.checked);
+        });
+        updateCount();
+      });
+    }
+
+    // Marcação de linha
+    document.querySelectorAll('.row-check').forEach(cb => {
+      cb.addEventListener('change', () => {
+        cb.closest('tr').classList.toggle('selected', cb.checked);
+        updateCount();
+      });
+    });
+
+    // Exclusão individual via fetch
+    document.querySelectorAll('.btn-excluir').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (!confirm('Deseja excluir esta variação?')) return;
+        const resp = await fetch(`/variacoes/excluir/${id}`, { method: 'POST' });
+        if (!resp.ok) {
+          const txt = await resp.text();
+          alert('Falha ao excluir: ' + txt);
+          return;
+        }
+        location.reload();
+      });
+    });
+
+    // Ação do botão "Excluir Selecionados" no topo
+    document.getElementById('deleteSelectedTop').addEventListener('click', () => {
+      document.getElementById('form-massa').requestSubmit();
+    });
+
+    // Busca (client-side)
+    const searchInput = document.getElementById('search');
+    const clearBtn = document.getElementById('clearSearch');
+    const rows = Array.from(document.querySelectorAll('#tabela tbody tr'));
+    const resultInfo = document.getElementById('resultInfo');
+
+    function normalize(txt){
+      return (txt || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    }
+
+    function updateCount(){
+      const visible = rows.filter(r => r.style.display !== 'none').length;
+      if (resultInfo) resultInfo.textContent = `Exibindo ${visible} registro(s)`;
+    }
+
+    function filterRows(q){
+      const nq = normalize(q);
+      rows.forEach(tr => {
+        const variado = tr.querySelector('.col-variado')?.textContent || '';
+        const base = tr.querySelector('.col-base')?.textContent || '';
+        const hit = normalize(variado).includes(nq) || normalize(base).includes(nq);
+        tr.style.display = hit ? '' : 'none';
+      });
+      updateCount();
+    }
+
+    let t;
+    searchInput.addEventListener('input', (e)=>{
+      clearTimeout(t);
+      t = setTimeout(()=> filterRows(e.target.value), 120);
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      searchInput.value = '';
+      filterRows('');
+      searchInput.focus();
+    });
+
+    // Atalho: Delete/Backspace exclui selecionados
+    document.addEventListener('keydown', async function(e) {
+      if (!(e.key === 'Delete' || e.key === 'Backspace')) return;
+
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+
+      const checks = Array.from(document.querySelectorAll('.row-check:checked'));
+      if (checks.length === 0) return;
+
+      const ids = checks.map(cb => cb.value);
+      if (!confirm(`Excluir ${ids.length} variação(ões)?`)) return;
+
+      const resp = await fetch('/variacoes/excluir_em_massa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
+
+      if (!resp.ok) {
+        const txt = await resp.text();
+        alert('Falha ao excluir em massa: ' + txt);
+        return;
+      }
+      location.reload();
+    });
+
+    // Inicial
+    updateCount();
+
+    // ===== Modal =====
+    const modalOverlay = document.getElementById('modalOverlay');
+    const btnNovo = document.getElementById('btnNovo');
+    const modalClose = document.getElementById('modalClose');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalSave = document.getElementById('modalSave');
+    const formCadastro = document.getElementById('form-cadastro');
+    const modalTitle = document.getElementById('modalTitle');
+
+    function openModal(titulo = 'Nova Variação'){
+      modalTitle.textContent = titulo;
+      modalOverlay.classList.add('open');
+      modalOverlay.setAttribute('aria-hidden', 'false');
+      // foco no primeiro campo
+      const first = formCadastro.querySelector('input[name="codigo_variado"]');
+      setTimeout(()=> first && first.focus(), 50);
+    }
+    function closeModal(){
+      modalOverlay.classList.remove('open');
+      modalOverlay.setAttribute('aria-hidden', 'true');
+    }
+    function resetForm(){
+      formCadastro.reset();
+      formCadastro.querySelector('#edit-id').value = '';
+    }
+
+    btnNovo.addEventListener('click', ()=>{
+      resetForm();
+      openModal('Nova Variação');
+    });
+    modalClose.addEventListener('click', closeModal);
+    modalCancel.addEventListener('click', closeModal);
+
+    // Fechar com ESC ou clique fora
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal();
+    });
+    modalOverlay.addEventListener('click', (e)=>{
+      if (e.target === modalOverlay) closeModal();
+    });
+
+    // Salvar (submete o form)
+    modalSave.addEventListener('click', ()=>{
+      formCadastro.requestSubmit();
+    });
+
+    // Disponibiliza função global para abrir modal em modo edição
+    // Exemplo de uso:
+    // openEditar({ id: 1, codigo_variado:'3599A', codigos_base:'3599', endereco:'A01-B01', url_image:'https://...', descricao:'...', quantidade:5 })
+    window.openEditar = function(variacao){
+      resetForm();
+      if (!variacao) return;
+
+      formCadastro.elements['id'].value = variacao.id ?? '';
+      formCadastro.elements['codigo_variado'].value = variacao.codigo_variado ?? '';
+      formCadastro.elements['codigos_base'].value = variacao.codigos_base ?? '';
+      formCadastro.elements['endereco'].value = variacao.endereco ?? '';
+      formCadastro.elements['url_image'].value = variacao.url_image ?? '';
+      formCadastro.elements['descricao'].value = variacao.descricao ?? '';
+      formCadastro.elements['quantidade'].value = variacao.quantidade ?? '';
+
+      openModal('Editar Variação');
+    };
+  </script>
 </body>
 </html>

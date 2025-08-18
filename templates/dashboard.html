@@ -1,140 +1,149 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
 
-        body {
-            display: flex;
-            justify-content: center; /* centraliza horizontalmente */
-            align-items: center;     /* centraliza verticalmente */
-            height: 100vh;           /* altura total da viewport */
-            margin: 0;               /* remove margens padrão */
-            background-color: #f0f2f5; /* opcional: fundo claro */
-            }
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary-600:#1d4ed8;
+      --danger:#ef4444;
+      --danger-600:#dc2626;
+      --success:#16a34a;
+      --warning:#d97706;
+      --border:#e5e7eb;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(0,0,0,.06);
+      --sidebar:#0f172a;
+      --row-alt:#fafbfc;
+    }
 
-        .sidebar {
-            width: 240px;
-            height: 100vh;
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            padding: 30px 20px;
-            position: fixed;
-            left: 0;
-            top: 0;
-        }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
 
-        .sidebar h2 {
-            font-size: 24px;
-            margin-bottom: 30px;
-            text-align: center;
-            border-bottom: 1px solid #34495e;
-            padding-bottom: 10px;
-        }
+    /* Sidebar */
+    .sidebar{
+      position:fixed; inset:0 auto 0 0; width:220px; background:var(--sidebar); color:#e5e7eb;
+      padding:24px 16px; box-shadow:2px 0 12px rgba(0,0,0,.15);
+    }
+    .brand{font-weight:700; letter-spacing:.4px; margin-bottom:18px}
+    .nav{list-style:none; padding:0; margin:0}
+    .nav a{
+      display:block; padding:10px 12px; border-radius:8px; color:#e5e7eb; text-decoration:none;
+    }
+    .nav a:hover{background:rgba(255,255,255,.08)}
 
-        .sidebar ul {
-            list-style: none;
-        }
+    /* Main */
+    .main{margin-left:220px; padding:28px}
 
-        .sidebar ul li {
-            margin: 20px 0;
-        }
+    .page-head{
+      display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px;
+    }
+    h1{margin:0; font-size:24px}
+    .subtitle{color:var(--muted); font-size:13px}
 
-        .sidebar ul li a {
-            color: #ecf0f1;
-            text-decoration: none;
-            font-size: 16px;
-            padding: 10px;
-            display: block;
-            border-radius: 6px;
-            transition: background 0.3s ease;
-        }
+    /* Cards */
+    .cards{
+      display:grid; gap:14px;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+    }
+    @media (max-width: 1200px){ .cards{grid-template-columns: repeat(3, minmax(0,1fr));} }
+    @media (max-width: 900px){ .cards{grid-template-columns: repeat(2, minmax(0,1fr));} }
+    @media (max-width: 560px){ .cards{grid-template-columns: 1fr;} }
 
-        .sidebar ul li a:hover {
-            background-color: #3498db;
-        }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:18px;
+      display:flex; flex-direction:column; gap:6px; transition:transform .12s ease;
+    }
+    .card:hover{transform:translateY(-2px)}
+    .card .label{font-size:13px; color:var(--muted)}
+    .card .value{font-size:32px; font-weight:700; line-height:1.1}
 
-        .main {
-            margin-left: 240px;
-            padding: 40px;
-            flex: 1;
-        }
+    /* color accents */
+    .accent-primary .value{color:var(--primary)}
+    .accent-success .value{color:var(--success)}
+    .accent-warning .value{color:var(--warning)}
+    .accent-danger  .value{color:var(--danger)}
 
-        h1 {
-            
-            color: #2c3e50;
-            font-size: 32px;
-            margin-bottom: 30px;
-        }
+    /* Quick links row (opcional) */
+    .quick{
+      margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .btn{
+      appearance:none; border:1px solid transparent; background:var(--primary); color:#fff;
+      padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; transition:.15s;
+      box-shadow: var(--shadow); text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{background:var(--primary-600)}
+    .btn.ghost{background:#fff; color:var(--text); border-color:var(--border)}
+    .btn.ghost:hover{border-color:#cbd5e1}
 
-        
-        .cards {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        width: 90%; /* ou um max-width fixo, ex: 1200px */
-        max-width: 1200px;
-        }
-
-        .card {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-            padding: 30px 20px;
-            text-align: center;
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card h2 {
-            font-size: 36px;
-            color: #3498db;
-            margin-bottom: 10px;
-        }
-
-        .card p {
-            font-size: 16px;
-            color: #7f8c8d;
-        }
-    </style>
+    /* Responsive layout tweaks */
+    @media (max-width: 980px){
+      .main{margin-left:0; padding:16px}
+      .sidebar{position:static; width:auto; border-radius:0; box-shadow:none}
+    }
+  </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Menu</h2>
-        <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/relatorio">Relatório</a></li>
-            <li><a href="/pedidos">Pedidos</a></li>
-        </ul>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">Menu</div>
+    <ul class="nav">
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/relatorio">Relatório</a></li>
+      <li><a href="/pedidos">Pedidos</a></li>
+      <li><a href="/variacoes">Variações</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-head">
+      <h1>Dashboard de Pedidos</h1>
+      <div class="subtitle">Resumo geral do dia</div>
     </div>
 
-    <h1>Dashboard de Pedidos</h1>
-    <div class="cards">
-        <div class="card">
-            <h2>{{ total }}</h2>
-            <p>Total de Pedidos</p>
-        </div>
-        <div class="card">
-            <h2>{{ autorizados }}</h2>
-            <p>Pedidos Autorizados</p>
-        </div>
-        <div class="card">
-            <h2>{{ cancelados }}</h2>
-            <p>Pedidos Cancelados</p>
-        </div>
-        <div class="card">
-            <h2>{{ bipados }}</h2>
-            <p>Pedidos Bipados</p>
-        </div>
+    <section class="cards">
+      <article class="card accent-primary">
+        <div class="label">Total de Pedidos</div>
+        <div class="value">{{ total }}</div>
+      </article>
+
+      <article class="card accent-success">
+        <div class="label">Pedidos Autorizados</div>
+        <div class="value">{{ autorizados }}</div>
+      </article>
+
+      <article class="card accent-danger">
+        <div class="label">Pedidos Cancelados</div>
+        <div class="value">{{ cancelados }}</div>
+      </article>
+
+      <article class="card accent-warning">
+        <div class="label">Pedidos Bipados</div>
+        <div class="value">{{ bipados }}</div>
+      </article>
+    </section>
+
+    <!-- Ações rápidas (opcional) -->
+    <div class="quick">
+      <a class="btn" href="/variacoes">Ir para Variações</a>
+      <a class="btn ghost" href="/relatorio">Abrir Relatório</a>
+      <a class="btn ghost" href="/pedidos">Ver Pedidos</a>
     </div>
+  </main>
 </body>
 </html>

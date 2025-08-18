@@ -1,425 +1,461 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Pedidos</title>
-    <style>
-       
-        body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f4f6f8;
-        margin: 0;
-        padding: 40px 20px;
-        color: #333;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista de Pedidos</title>
 
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-
-        form, .input-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            max-width: 400px;
-            padding: 10px 14px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #2c3e50;
-            color: white;
-            text-align: left;
-            padding: 12px 16px;
-            font-weight: 600;
-        }
-
-        td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #eaeaea;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        td[colspan="6"] {
-            text-align: center;
-            color: #999;
-            padding: 20px;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100px;
-            height: 100%;
-            background-color: #2c3e50;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            color: white;
-        }
-
-        .sidebar h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: #ecf0f1;
-        }
-
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .sidebar ul li {
-            margin-bottom: 15px;
-        }
-
-        .sidebar ul li a {
-            color: #ecf0f1;
-            text-decoration: none;
-            font-size: 16px;
-            transition: 0.2s;
-        }
-
-        .sidebar ul li a:hover {
-            color: #3498db;
-        }
-
-        /* Compensar largura da sidebar */
-        body {
-            margin-left: 200px;
-        }
-
-        /* Status */
-        .status {
-            display: inline-block;
-            padding: 5px 10px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 12px;
-            color: #fff;
-        }
-        .autorizada  { background-color: #2ecc71; }
-        .cancelado   { background-color: #f1c40f; color: #333; }
-        .buffered    { background-color: #3498db; }
-        .bipado      { background-color: #9b59b6; }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            body {
-                margin-left: 0;
-                padding: 20px 10px;
-            }
-
-            .sidebar {
-                position: static;
-                width: 100%;
-                height: auto;
-                box-shadow: none;
-                padding: 10px;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-            }
-
-            .sidebar ul {
-                display: flex;
-                flex-direction: row;
-                gap: 15px;
-                margin: 0;
-            }
-
-            .sidebar h2 {
-                display: none;
-            }
-
-            table, thead, tbody, th, td, tr {
-                display: block;
-            }
-
-            thead {
-                display: none;
-            }
-
-            tr {
-                margin-bottom: 15px;
-                border-bottom: 1px solid #ccc;
-                background-color: white;
-                border-radius: 8px;
-                padding: 10px;
-            }
-
-            td {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 10px;
-                font-size: 14px;
-            }
-
-            td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                flex-basis: 50%;
-            }
-        }
-
-        .icone-alerta {
-            font-size: 20px;
-            font-weight: bold;
-            display: inline-block;
-            animation: pulse 1.2s infinite; /* opcional para atenção */
+  <style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary-600:#1d4ed8;
+      --danger:#ef4444;
+      --success:#16a34a;
+      --warning:#d97706;
+      --border:#e5e7eb;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(0,0,0,.06);
+      --sidebar:#0f172a;
+      --row-alt:#fafbfc;
+      --purple:#7c3aed;
+      --blue:#2563eb;
+      --yellow:#f59e0b;
+      --green:#10b981;
     }
-        
-    </style>
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:fixed; inset:0 auto 0 0; width:220px; background:var(--sidebar); color:#e5e7eb;
+      padding:24px 16px; box-shadow:2px 0 12px rgba(0,0,0,.15);
+    }
+    .brand{font-weight:700; letter-spacing:.4px; margin-bottom:18px}
+    .nav{list-style:none; padding:0; margin:0}
+    .nav a{
+      display:block; padding:10px 12px; border-radius:8px; color:#e5e7eb; text-decoration:none;
+    }
+    .nav a:hover{background:rgba(255,255,255,.08)}
+
+    /* Main */
+    .main{margin-left:220px; padding:28px}
+    @media (max-width: 980px){
+      .main{margin-left:0; padding:16px}
+      .sidebar{position:static; width:auto; border-radius:0; box-shadow:none}
+    }
+
+    .page-head{
+      display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px;
+    }
+    h1{margin:0; font-size:24px}
+    .subtitle{color:var(--muted); font-size:13px}
+
+    /* Toolbar */
+    .toolbar{
+      display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin:12px 0 18px;
+    }
+    @media (max-width: 820px){ .toolbar{grid-template-columns: 1fr} }
+
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .card h3{margin:0 0 10px 0; font-size:15px}
+    .form-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .input{
+      padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px; background:#fff; width:360px; max-width:100%;
+      outline:none; transition:.15s; box-shadow: var(--shadow);
+    }
+    .input:focus{border-color:var(--primary)}
+    .btn{
+      appearance:none; border:1px solid transparent; background:var(--primary); color:#fff;
+      padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; transition:.15s;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover{background:var(--primary-600)}
+    .btn.ghost{background:#fff; color:var(--text); border-color:var(--border)}
+    .btn.ghost:hover{border-color:#cbd5e1}
+
+    /* Table */
+    .table-wrap{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow: var(--shadow); overflow:hidden;
+    }
+    table{width:100%; border-collapse:separate; border-spacing:0}
+    thead th{
+      position:sticky; top:0; z-index:1;
+      background:#0f172a; color:#e5e7eb; text-align:left; font-weight:600; letter-spacing:.3px;
+      padding:12px 14px; font-size:13px;
+    }
+    tbody td{padding:12px 14px; border-top:1px solid var(--border); font-size:14px; vertical-align:middle}
+    tbody tr:nth-child(even){background:var(--row-alt)}
+    tbody tr:hover{background:#eef2ff}
+
+    .table-actions{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; border-top:1px solid var(--border);
+      background:#fbfbfd;
+    }
+    .muted{color:var(--muted); font-size:13px}
+
+    /* Status badges */
+    .status{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; color:#fff;
+    }
+    .status.autorizada{background:var(--green)}
+    .status.cancelado{background:var(--yellow); color:#111}
+    .status.buffered{background:var(--blue)}
+    .status.bipado{background:var(--purple)}
+
+    .warn{font-size:18px; margin-left:6px}
+
+    /* Responsive stacked table */
+    @media (max-width: 900px){
+      thead{display:none}
+      table, tbody, tr, td{display:block; width:100%}
+      tbody tr{border-top:1px solid var(--border)}
+      tbody td{display:flex; justify-content:space-between; gap:10px}
+      tbody td::before{content:attr(data-label); font-weight:600; color:var(--muted)}
+      .table-actions{flex-direction:column; align-items:stretch}
+    }
+
+    /* Notification */
+    #notificacao{
+      display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%);
+      padding:10px 16px; border-radius:10px; color:#fff; font-weight:700; z-index:9999; box-shadow:var(--shadow);
+    }
+  </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Menu</h2>
-        <ul>
-            <li><a href="/pedidos">Pedidos</a></li>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/relatorio">Relatório</a></li>
-            <li><a href="/variacoes">Variações</a></li>
-        </ul>
-    </div>
-    <h1>Pedidos Faturados</h1>
-    <h2 id="contador-pedidos">Total: {{ total_pedidos }}</h2>
-    <div class="input-wrapper">
-        <div>
-            <label for="chave">Bipar Chave de Acesso:</label><br>
-            <input type="text" id="chave" name="chave" placeholder="Bipe a chave e pressione Enter" style="width: 300px;">
-        </div>
-        <div>
-            <label for="consulta-chave">Consultar Chave de Acesso:</label><br>
-            <input type="text" id="consulta-chave" name="consulta-chave" placeholder="Digite para filtrar na tabela" style="width: 300px;">
-        </div>
-    </div>
-</div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">Menu</div>
+    <ul class="nav">
+      <li><a href="/pedidos">Pedidos</a></li>
+      <li><a href="/dashboard">Dashboard</a></li>
+      <li><a href="/relatorio">Relatório</a></li>
+      <li><a href="/variacoes">Variações</a></li>
+    </ul>
+  </aside>
 
-    </form>
-    <table id="tabela-pedidos">
+  <!-- Main -->
+  <main class="main">
+    <div class="page-head">
+      <h1>Pedidos Faturados</h1>
+      <div class="subtitle">Bipe/consulte chaves e acompanhe o status</div>
+    </div>
+
+    <div class="toolbar">
+      <div class="card">
+        <h3>Bipar Chave de Acesso</h3>
+        <div class="form-row">
+          <input class="input" type="text" id="chave" name="chave" placeholder="Bipe a chave e pressione Enter">
+          <button class="btn" type="button" id="btn-bipar">Bipar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Consultar Chave de Acesso</h3>
+        <div class="form-row">
+          <input class="input" type="text" id="consulta-chave" name="consulta-chave" placeholder="Digite a chave e pressione Enter">
+          <button class="btn ghost" type="button" id="btn-consultar">Consultar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <div id="contador-pedidos" class="muted">Total: {{ total_pedidos }}</div>
+      <div id="resultInfo" class="muted"></div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-wrap">
+      <table id="tabela-pedidos">
         <thead>
-            <tr>
-                <th>Data</th>
-                <th>Hora Bipado</th>
-                <th>ID</th>
-                <th>Status</th>
-                <th>Chave de Acesso</th>
-                <th>Nome</th>
-                <th>Num. NFe</th>
-                <th>MarketPlaceID</th>
-                <th>Loja</th>
-            </tr>
+          <tr>
+            <th>Data</th>
+            <th>Hora Bipado</th>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Chave de Acesso</th>
+            <th>Nome</th>
+            <th>Num. NFe</th>
+            <th>MarketPlaceID</th>
+            <th>Loja</th>
+          </tr>
         </thead>
         <tbody>
-            {% for pedido in pedidos %}
-            <tr>
-                <td>{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td>{{ pedido.hora_bipado if pedido.hora_bipado else 'Pedido não bipado' }}</td>
-                <td>{{ pedido.id }}</td>  
-                <td>
-                <span class="status {{ pedido.status|lower }}">{{ pedido.status }}</span>
-                
-                    {% if pedido.hora <(datetime.utcnow() - timedelta(hours=10)) and pedido.status.lower() != 'buffered' %}
-                        <span class="icone-alerta" title="Pedido com mais de 10h e não bipado!">⚠️</span>
-                    {% endif %}
-               
-            </td> 
-                <td>{{ pedido.chaveacesso }}</td>
-                <td>{{ pedido.nome }}</td>
-                <td>{{ pedido.numnfe }}</td>
-                <td>{{ pedido.marketPlaceID }}</td>
-                <td>
-                {% if pedido.idloja == "Mercado Livre" %}
-                    <img src="https://w7.pngwing.com/pngs/396/132/png-transparent-free-market-e-marketplace-brazil-market-economy-others-miscellaneous-text-service-thumbnail.png"
-                        alt="Mercado Livre" width="36" height="26">
-                {% elif pedido.idloja == "Shopee" %}
-                    <img src="https://www.clipartmax.com/png/middle/109-1098412_logo-shopee-png.png"
-                        alt="Shopee" width="30" height="32">
-                {% elif pedido.idloja == "Candide" %}
-                    <img src="https://d3p2amk7tvag7f.cloudfront.net/brands/d3a98b4202591542ff4eab6fe3001e2df4452070.png"
-                        alt="Candide" width="65" height="20">
-                {% elif pedido.idloja == "Funko" %}
-                    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Funko.svg/1200px-Funko.svg.png"
-                        alt="Funko" width="70" height="25">
-                {% elif pedido.idloja == "Magazine Luiza" %}
-                    <img src="https://logodownload.org/wp-content/uploads/2014/06/magalu-logo.png"
-                        alt="Magalu" width="63" height="15">
-                {% elif pedido.idloja == "Privalia" %}
-                    <img src="https://www.imcbrasil.com/wp-content/uploads/2021/06/privalia.png"
-                        alt="Privalia" width="60" height="15">
-                {% elif pedido.idloja == "Shein" %}
-                    <img src="https://img.icons8.com/?size=512&id=V3r2kWDPwZgQ&format=png"
-                        alt="Shein" width="35" height="33">
-                {% else %}
-                    {{ pedido.idloja }}
-                {% endif %}
-               
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="6">Nenhum pedido encontrado.</td>
-            </tr>
-            {% endfor %}
+          {% for pedido in pedidos %}
+          <tr>
+            <td data-label="Data">{{ pedido.hora.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td data-label="Hora Bipado">{{ pedido.hora_bipado if pedido.hora_bipado else 'Pedido não bipado' }}</td>
+            <td data-label="ID">{{ pedido.id }}</td>
+            <td data-label="Status">
+              <span class="status {{ pedido.status|lower }}">{{ pedido.status }}</span>
+              {% if pedido.hora < (datetime.utcnow() - timedelta(hours=10)) and pedido.status.lower() != 'buffered' %}
+                <span class="warn" title="Pedido com mais de 10h e não bipado!">⚠️</span>
+              {% endif %}
+            </td>
+            <td data-label="Chave de Acesso">{{ pedido.chaveacesso }}</td>
+            <td data-label="Nome">{{ pedido.nome }}</td>
+            <td data-label="Num. NFe">{{ pedido.numnfe }}</td>
+            <td data-label="MarketPlaceID">{{ pedido.marketPlaceID }}</td>
+            <td data-label="Loja">
+              {% if pedido.idloja == "Mercado Livre" %}
+                <img src="https://w7.pngwing.com/pngs/396/132/png-transparent-free-market-e-marketplace-brazil-market-economy-others-miscellaneous-text-service-thumbnail.png" alt="Mercado Livre" width="36" height="26">
+              {% elif pedido.idloja == "Shopee" %}
+                <img src="https://www.clipartmax.com/png/middle/109-1098412_logo-shopee-png.png" alt="Shopee" width="30" height="32">
+              {% elif pedido.idloja == "Candide" %}
+                <img src="https://d3p2amk7tvag7f.cloudfront.net/brands/d3a98b4202591542ff4eab6fe3001e2df4452070.png" alt="Candide" width="65" height="20">
+              {% elif pedido.idloja == "Funko" %}
+                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Funko.svg/1200px-Funko.svg.png" alt="Funko" width="70" height="25">
+              {% elif pedido.idloja == "Magazine Luiza" %}
+                <img src="https://logodownload.org/wp-content/uploads/2014/06/magalu-logo.png" alt="Magalu" width="63" height="15">
+              {% elif pedido.idloja == "Privalia" %}
+                <img src="https://www.imcbrasil.com/wp-content/uploads/2021/06/privalia.png" alt="Privalia" width="60" height="15">
+              {% elif pedido.idloja == "Shein" %}
+                <img src="https://img.icons8.com/?size=512&id=V3r2kWDPwZgQ&format=png" alt="Shein" width="35" height="33">
+              {% else %}
+                {{ pedido.idloja }}
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td data-label="Info" colspan="9" style="text-align:center; color:var(--muted)">Nenhum pedido encontrado.</td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
-    <script>
-        document.getElementById("chave").addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        const chave = this.value;
+      </table>
 
-        fetch("/bipar", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ chave: chave })
-        })
-        .then(async response => {
-    try {
-        const rawText = await response.text();
+      <div class="table-actions">
+        <div class="muted">Use Enter ou os botões para bipar/consultar chaves</div>
+      </div>
+    </div>
+  </main>
 
-        const data = JSON.parse(rawText);
-      
+  <div id="notificacao"></div>
 
-        if (response.ok) {
-            atualizarTabelaHTML(data.html);
-            document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
-            mostrarNotificacao(data.mensagem || "Sucesso!", "green");
-        } else {
-            mostrarNotificacao(
-                data.erro + " Data: " + data.data || data.mensagem || "Erro ao bipar",
-                "red"
-            );
+  <script>
+    // ------ Helpers UI ------
+    function mostrarNotificacao(mensagem, cor='var(--primary)'){
+      const n = document.getElementById("notificacao");
+      n.textContent = mensagem;
+      n.style.backgroundColor = cor;
+      n.style.display = "block";
+      clearTimeout(n._t);
+      n._t = setTimeout(()=> n.style.display = "none", 3000);
+    }
+
+    function atualizarTabelaHTML(html){
+      const tbody = document.querySelector("#tabela-pedidos tbody");
+      tbody.innerHTML = html;
+      atualizarContagem();
+    }
+
+    function atualizarTabelaPedidosJSON(data) {
+        const tbody = document.querySelector("#tabela-pedidos tbody");
+
+        if (!data || !Array.isArray(data.pedidos) || data.pedidos.length === 0) {
+            tbody.innerHTML = `<tr>
+            <td data-label="Info" colspan="9" style="text-align:center; color:var(--muted)">
+                Nenhum pedido encontrado.
+            </td>
+            </tr>`;
+            atualizarContagem();
+            return;
         }
 
-        document.getElementById("chave").value = "";
+        // Monta as linhas com base nos dados
+        const rows = data.pedidos.map(p => {
+            return `
+            <tr>
+                <td data-label="Data">${p.hora}</td>
+                <td data-label="Hora Bipado">${p.hora_bipado || "Pedido não bipado"}</td>
+                <td data-label="ID">${p.id}</td>
+                <td data-label="Status">
+                <span class="status ${p.status.toLowerCase()}">${p.status}</span>
+                </td>
+                <td data-label="Chave de Acesso">${p.chaveacesso}</td>
+                <td data-label="Nome">${p.nome}</td>
+                <td data-label="Num. NFe">${p.numnfe}</td>
+                <td data-label="MarketPlaceID">${p.marketPlaceID || ""}</td>
+                <td data-label="Loja">${renderLoja(p.idloja)}</td>
+            </tr>
+            `;
+        }).join("");
 
-    } catch (e) {
-        mostrarNotificacao("Resposta inválida do servidor (não é JSON)", "red");
-    }
-})
-        .catch(error => {
-            console.error("Erro:", error);
-            mostrarNotificacao("Erro ao conectar com o servidor ou resposta inválida", "red");
-        });
-    }
-});
+        tbody.innerHTML = rows;
 
-function atualizarTabelaHTML(html) {
-    const tbody = document.querySelector("#tabela-pedidos tbody");
-    tbody.innerHTML = html;
-}
+        // Atualiza contador total
+        const c = document.getElementById('contador-pedidos');
+        if (c) c.textContent = `Total: ${data.total_pedidos}`;
 
-    function mostrarNotificacao(mensagem, cor) {
-            const notificacao = document.getElementById("notificacao");
-            notificacao.textContent = mensagem;
-            notificacao.style.backgroundColor = cor;
-            notificacao.style.display = "block";
-
-            setTimeout(() => {
-                notificacao.style.display = "none";
-            }, 3000);
+        atualizarContagem();
         }
     
-    function inserirColunaHoraBipado() {
-        const ths = document.querySelectorAll("table thead tr th");
-        const existe = Array.from(ths).some(th => th.textContent.trim() === "Hora Bipado");
-
-        if (!existe) {
-            const tr = document.querySelector("table thead tr");
-
-            // Cria o novo <th>
-            const novoTh = document.createElement("th");
-            novoTh.textContent = "Hora Bipado";
-
-            // Insere após "Data" (índice 0)
-            tr.insertBefore(novoTh, tr.children[1]);
+        function renderLoja(idloja) {
+            switch (idloja) {
+                case "Mercado Livre":
+                return `<img src="https://w7.pngwing.com/pngs/396/132/png-transparent-free-market-e-marketplace-brazil-market-economy-others-miscellaneous-text-service-thumbnail.png" width="36" height="26">`;
+                case "Shopee":
+                return `<img src="https://www.clipartmax.com/png/middle/109-1098412_logo-shopee-png.png" width="30" height="32">`;
+                case "Candide":
+                return `<img src="https://d3p2amk7tvag7f.cloudfront.net/brands/d3a98b4202591542ff4eab6fe3001e2df4452070.png" width="65" height="20">`;
+                case "Funko":
+                return `<img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cc/Funko.svg/1200px-Funko.svg.png" width="70" height="25">`;
+                case "Magazine Luiza":
+                return `<img src="https://logodownload.org/wp-content/uploads/2014/06/magalu-logo.png" width="63" height="15">`;
+                case "Privalia":
+                return `<img src="https://www.imcbrasil.com/wp-content/uploads/2021/06/privalia.png" width="60" height="15">`;
+                case "Shein":
+                return `<img src="https://img.icons8.com/?size=512&id=V3r2kWDPwZgQ&format=png" width="35" height="33">`;
+                default:
+                return idloja || "";
+                }
         }
+    function atualizarContagem(){
+      const tbody = document.querySelector("#tabela-pedidos tbody");
+      const linhas = tbody ? tbody.querySelectorAll("tr") : [];
+      const visiveis = Array.from(linhas).filter(tr => tr.style.display !== 'none').length;
+      const info = document.getElementById("resultInfo");
+      if (info) info.textContent = `Exibindo ${visiveis} registro(s)`;
     }
-    document.getElementById("consulta-chave").addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        const chave = this.value.trim();
 
-        if (!chave) return;
-
-        fetch("/consultar-chave", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ chave: chave })
-        })
-        .then(async response => {
-            inserirColunaHoraBipado();
-            let data;
-            try {
-                data = await response.json();
-            } catch (e) {
-                mostrarNotificacao("Resposta inválida do servidor", "red");
-                return;
-            }
-
-            if (response.ok) {
-                atualizarTabela(data.pedidos);
-                document.getElementById('contador-pedidos').textContent = `Total: ${data.total_pedidos}`;
-                mostrarNotificacao(data.mensagem || "Consulta realizada com sucesso", "green");
-            } else {
-                mostrarNotificacao(data.erro || "Chave não encontrada", "orange");
-            }
-
-            this.value = "";
-        })
-        .catch(error => {
-            console.error("Erro:", error);
-            mostrarNotificacao("Erro ao consultar chave", "red");
+    // ------ BIPAR ------
+    async function bipar(chave){
+      try{
+        const resp = await fetch("/bipar", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ chave })
         });
-    }
-});
-</script>
 
-<div id="notificacao" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%);
-padding: 10px 20px; border-radius: 5px; color: white; font-weight: bold; z-index: 9999; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
-</div>
+        const raw = await resp.text();
+        let data;
+        try{ data = JSON.parse(raw); }
+        catch(e){
+          mostrarNotificacao("Resposta inválida do servidor (não é JSON)", "var(--danger)");
+          return;
+        }
+
+        if(resp.ok){
+          atualizarTabelaHTML(data.html);
+          const c = document.getElementById('contador-pedidos');
+          if (c) c.textContent = `Total: ${data.total_pedidos}`;
+          mostrarNotificacao(data.mensagem || "Sucesso!", "var(--success)");
+        }else{
+          mostrarNotificacao((data.erro ? data.erro + " " : "") + (data.data || data.mensagem || "Erro ao bipar"), "var(--danger)");
+        }
+      }catch(err){
+        console.error(err);
+        mostrarNotificacao("Erro ao conectar com o servidor", "var(--danger)");
+      }
+    }
+
+    // ------ CONSULTAR ------
+    function inserirColunaHoraBipado(){
+      const tr = document.querySelector("#tabela-pedidos thead tr");
+      if(!tr) return;
+      const exists = Array.from(tr.children).some(th => th.textContent.trim() === "Hora Bipado");
+      if (!exists){
+        const th = document.createElement("th");
+        th.textContent = "Hora Bipado";
+        tr.insertBefore(th, tr.children[1]); // após "Data"
+      }
+    }
+
+    async function consultar(chave){
+      try{
+        const resp = await fetch("/consultar-chave", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ chave })
+        });
+        inserirColunaHoraBipado();
+
+        let data;
+        try{ data = await resp.json(); }
+        catch(e){
+          mostrarNotificacao("Resposta inválida do servidor", "var(--danger)");
+          return;
+        }
+
+        if(resp.ok){
+          // espera que o servidor retorne { pedidos, total_pedidos } ou html
+          if (data){
+             atualizarTabelaPedidosJSON(data);
+          } else if (data.pedidos){
+            // se vier um array, você pode montar as linhas aqui (mantive simples)
+            // por enquanto, apenas atualiza contadores
+            atualizarContagem();
+          }
+          const c = document.getElementById('contador-pedidos');
+          if (c) c.textContent = `Total: ${data.total_pedidos}`;
+          mostrarNotificacao(data.mensagem || "Consulta realizada com sucesso", "var(--success)");
+        }else{
+          mostrarNotificacao(data.erro || "Chave não encontrada", "var(--warning)");
+        }
+      }catch(err){
+        console.error(err);
+        mostrarNotificacao("Erro ao consultar chave", "var(--danger)");
+      }
+    }
+
+    // ------ Listeners ------
+    const inpBipar = document.getElementById("chave");
+    const btnBipar = document.getElementById("btn-bipar");
+    const inpConsultar = document.getElementById("consulta-chave");
+    const btnConsultar = document.getElementById("btn-consultar");
+
+    if (inpBipar){
+      inpBipar.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){
+          e.preventDefault();
+          const v = inpBipar.value.trim();
+          if(!v) return;
+          bipar(v).then(()=> inpBipar.value = "");
+        }
+      });
+    }
+    if (btnBipar){
+      btnBipar.addEventListener("click", ()=>{
+        const v = inpBipar.value.trim();
+        if(!v) return;
+        bipar(v).then(()=> inpBipar.value = "");
+      });
+    }
+
+    if (inpConsultar){
+      inpConsultar.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){
+          e.preventDefault();
+          const v = inpConsultar.value.trim();
+          if(!v) return;
+          consultar(v).then(()=> inpConsultar.value = "");
+        }
+      });
+    }
+    if (btnConsultar){
+      btnConsultar.addEventListener("click", ()=>{
+        const v = inpConsultar.value.trim();
+        if(!v) return;
+        consultar(v).then(()=> inpConsultar.value = "");
+      });
+    }
+
+    // inicial
+    atualizarContagem();
+  </script>
 </body>
 </html>
